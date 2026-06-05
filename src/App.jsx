@@ -1,10 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
+const QUIZ_MODES = {
+  MULTIPLICATION: 'multiplication',
+  DIVISION: 'division',
+};
 
 // 구구단 및 나눗셈 퀴즈 생성기 (knol-defence 스타일)
-const generateMathQuiz = () => {
-  const isDivision = Math.random() > 0.5;
+const generateMathQuiz = (mode = QUIZ_MODES.MULTIPLICATION) => {
+  const isDivision = mode === QUIZ_MODES.DIVISION;
   let q, a;
-  
+
   if (isDivision) {
     const divisor = Math.floor(Math.random() * 8) + 2; // 2 ~ 9
     const ans = Math.floor(Math.random() * 9) + 1; // 1 ~ 9
@@ -25,7 +30,7 @@ const generateMathQuiz = () => {
     if (wrongAns <= 0 || wrongAns === a) wrongAns = Math.floor(Math.random() * 81) + 1;
     options.add(wrongAns.toString());
   }
-  
+
   return {
     q,
     a: a.toString(),
@@ -44,94 +49,153 @@ const getTodayStr = () => {
 
 const WEAPON_TREE = {
   common: {
-    1: { 
-      name: "낡은 몽둥이", 
-      maxTier: false, 
-      desc: "그냥 마당에서 주운 낡은 나무 몽둥이. 한국인의 전통 무기(?)인 '몽둥이 찜질'을 가하기에 아주 적합하다." 
+    1: {
+      name: "낡은 몽둥이",
+      maxTier: false,
+      desc: "그냥 마당에서 주운 낡은 나무 몽둥이. 한국인의 전통 무기(?)인 '몽둥이 찜질'을 가하기에 아주 적합하다."
     },
   },
   "1H": {
-    2: { 
-      name: "환두대도", 
-      maxTier: false, 
-      desc: "삼국시대부터 쓰인 둥근고리칼. 고리 내부에 용이나 봉황 문양이 새겨져 소지자의 높은 신분을 과시할 수 있다." 
+    2: {
+      name: "환두대도",
+      maxTier: false,
+      desc: "삼국시대부터 쓰인 둥근고리칼. 고리 내부에 용이나 봉황 문양이 새겨져 소지자의 높은 신분을 과시할 수 있다."
     },
-    3: { 
-      name: "한석봉의 벼루와 붓", 
-      maxTier: false, 
-      desc: "어머니가 불을 끄고 떡을 썰 때 석봉이 어둠 속에서 글을 쓰던 명품 도구. 벼루에 맞으면 붓글씨보다 아프고 서럽다." 
+    3: {
+      name: "한석봉의 벼루와 붓",
+      maxTier: false,
+      desc: "어머니가 불을 끄고 떡을 썰 때 석봉이 어둠 속에서 글을 쓰던 명품 도구. 벼루에 맞으면 붓글씨보다 아프고 서럽다."
     },
-    4: { 
-      name: "조선 환도", 
-      maxTier: false, 
-      desc: "조선시대 군사들의 기본 칼. 띠돈을 사용해 360도 회전하여 찰 수 있어 활을 쏠 때 거슬리지 않는 선조들의 지혜가 돋보인다." 
+    4: {
+      name: "조선 환도",
+      maxTier: false,
+      desc: "조선시대 군사들의 기본 칼. 띠돈을 사용해 360도 회전하여 찰 수 있어 활을 쏠 때 거슬리지 않는 선조들의 지혜가 돋보인다."
     },
-    5: { 
-      name: "나전칠기 할머니 효자손", 
-      maxTier: false, 
-      desc: "영롱한 조개껍데기를 갈아 박은 명품 나전칠기 효자손. 효심 가득한 할머니의 손길로 적의 등을 매우 시원하게(?) 긁어준다." 
+    5: {
+      name: "나전칠기 할머니 효자손",
+      maxTier: false,
+      desc: "영롱한 조개껍데기를 갈아 박은 명품 나전칠기 효자손. 효심 가득한 할머니의 손길로 적의 등을 매우 시원하게(?) 긁어준다."
     },
-    6: { 
-      name: "주술의 성검 사인검", 
-      maxTier: false, 
-      desc: "호랑이의 해, 호랑이의 달, 호랑이의 날, 호랑이의 시에 벼려진 호국검. 사악한 영혼과 요괴를 물리치는 강력한 기운이 깃들어 있다." 
+    6: {
+      name: "주술의 성검 사인검",
+      maxTier: false,
+      desc: "호랑이의 해, 호랑이의 달, 호랑이의 날, 호랑이의 시에 벼려진 호국검. 사악한 영혼과 요괴를 물리치는 강력한 기운이 깃들어 있다."
     },
-    7: { 
-      name: "전설의 칠지도", 
-      maxTier: true, 
-      desc: "백제 철기 기술의 극치를 보여주는 일곱 개의 가지가 달린 칼. 왜왕에게 하사되었던 주술적이고 상징적인 최고의 역사적 성검." 
+    7: {
+      name: "전설의 칠지도",
+      maxTier: true,
+      desc: "백제 철기 기술의 극치를 보여주는 일곱 개의 가지가 달린 칼. 왜왕에게 하사되었던 주술적이고 상징적인 최고의 역사적 성검."
     },
   },
   "2H": {
-    2: { 
-      name: "조선의 협도", 
-      maxTier: false, 
-      desc: "무예도보통지에 실린 조선 보병의 긴 칼창. 적의 기병을 끌어내리거나 말다리를 베어 버리기에 최고의 위력을 낸다." 
+    2: {
+      name: "조선의 협도",
+      maxTier: false,
+      desc: "무예도보통지에 실린 조선 보병의 긴 칼창. 적의 기병을 끌어내리거나 말다리를 베어 버리기에 최고의 위력을 낸다."
     },
-    3: { 
-      name: "무쇠 가마솥 뚜껑", 
-      maxTier: false, 
-      desc: "가마솥 밥맛을 책임지는 묵직한 무쇠 뚜껑. 매우 단단하여 적의 타격을 전부 튕겨내고 던지면 치명적인 밥맛(?)을 낸다." 
+    3: {
+      name: "무쇠 가마솥 뚜껑",
+      maxTier: false,
+      desc: "가마솥 밥맛을 책임지는 묵직한 무쇠 뚜껑. 매우 단단하여 적의 타격을 전부 튕겨내고 던지면 치명적인 밥맛(?)을 낸다."
     },
-    4: { 
-      name: "임진왜란 쌍수도", 
-      maxTier: false, 
-      desc: "임진왜란 당시 왜검에 대적하기 위해 조선의 전술에 정식 채택된 긴 양손검. 크고 묵직하여 베는 순간 바람 소리가 대장간을 울린다." 
+    4: {
+      name: "임진왜란 쌍수도",
+      maxTier: false,
+      desc: "임진왜란 당시 왜검에 대적하기 위해 조선의 전술에 정식 채택된 긴 양손검. 크고 묵직하여 베는 순간 바람 소리가 대장간을 울린다."
     },
-    5: { 
-      name: "뽑아온 천하대장군 장승", 
-      maxTier: false, 
-      desc: "마을 입구에서 악귀를 막아주던 천하대장군 장승. 강력한 대장장이가 그냥 힘으로 땅에서 통째로 뽑아와서 그대로 후려친다." 
+    5: {
+      name: "뽑아온 천하대장군 장승",
+      maxTier: false,
+      desc: "마을 입구에서 악귀를 막아주던 천하대장군 장승. 강력한 대장장이가 그냥 힘으로 땅에서 통째로 뽑아와서 그대로 후려친다."
     },
-    6: { 
-      name: "장군의 월도", 
-      maxTier: false, 
-      desc: "조선의 용맹한 장수들이 기마전에서 휘두르던 초승달을 닮은 대도. 회전력을 이용하여 적진을 단숨에 쓸어버릴 수 있다." 
+    6: {
+      name: "장군의 월도",
+      maxTier: false,
+      desc: "조선의 용맹한 장수들이 기마전에서 휘두르던 초승달을 닮은 대도. 회전력을 이용하여 적진을 단숨에 쓸어버릴 수 있다."
     },
-    7: { 
-      name: "이충무공 장검", 
-      maxTier: true, 
-      desc: "충무공 이순신 장군이 사용했던 거대한 상징검. 칼날에 '삼척서천 산하동색' 명문이 새겨져 존재 자체로 적을 전율하게 한다." 
+    7: {
+      name: "이충무공 장검",
+      maxTier: true,
+      desc: "충무공 이순신 장군이 사용했던 거대한 상징검. 칼날에 '삼척서천 산하동색' 명문이 새겨져 존재 자체로 적을 전율하게 한다."
     },
   }
 };
 
 const UPGRADE_RATES = {
-  1: { cost: 50, rate: 100 },
-  2: { cost: 100, rate: 90 },
-  3: { cost: 200, rate: 70 },
-  4: { cost: 400, rate: 50 },
-  5: { cost: 800, rate: 30 },
-  6: { cost: 1500, rate: 10 },
+  1: { cost: 50, rate: 85 },
+  2: { cost: 100, rate: 70 },
+  3: { cost: 200, rate: 50 },
+  4: { cost: 400, rate: 35 },
+  5: { cost: 800, rate: 20 },
+  6: { cost: 1500, rate: 8 },
 };
 
+const MAX_WEAPON_TIER = 7;
+const GREAT_SUCCESS_DOUBLE_RATE = 3;
+const GREAT_SUCCESS_TRIPLE_RATE = 1;
+const GREAT_SUCCESS_FALSE_ALARM_RATE = 4;
+const DEPLOY_COOLDOWN_MS = 5 * 60 * 1000;
+const DEPLOY_QUIZ_REQUIRED = 5;
+const RECOVERY_BASE_RATE = 10;
+const RECOVERY_CORRECT_BONUS = 8;
 
-// 변방 출전 스테이지 (7단계, 보상은 매우 적게)
+const getAssetUrl = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`;
+const getImageUrl = (fileName) => getAssetUrl(`images/${fileName}`);
+
+const formatCooldown = (ms) => {
+  const totalSeconds = Math.ceil(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+};
+
+const getViewportMode = () => {
+  if (typeof window === 'undefined') return '웹/전자칠판';
+
+  const width = window.innerWidth;
+  if (width <= 640) return '모바일';
+  if (width <= 1024) return '태블릿';
+  return '웹/전자칠판';
+};
+
+const VIEW_MODES = ['모바일', '태블릿', '웹/전자칠판'];
+const VIEW_MODE_CLASS = {
+  모바일: 'mobile',
+  태블릿: 'tablet',
+  '웹/전자칠판': 'board',
+};
+
+const getWeaponNameByState = (targetTier, targetPath) => {
+  if (targetTier > 1 && targetPath && WEAPON_TREE[targetPath]?.[targetTier]) {
+    return WEAPON_TREE[targetPath][targetTier].name;
+  }
+  return WEAPON_TREE.common[1].name;
+};
+
+const getGreatSuccessStepCount = (currentTier) => {
+  const maxSteps = Math.min(3, MAX_WEAPON_TIER - currentTier);
+  if (maxSteps <= 1) return 1;
+
+  const roll = Math.random() * 100;
+  if (maxSteps >= 3) {
+    if (roll < GREAT_SUCCESS_TRIPLE_RATE) return 3;
+    if (roll < GREAT_SUCCESS_TRIPLE_RATE + GREAT_SUCCESS_DOUBLE_RATE) return 2;
+    return 1;
+  }
+  if (roll < GREAT_SUCCESS_DOUBLE_RATE) return 2;
+  return 1;
+};
+
+const getRandomDelay = (base, variance) => base + Math.floor(Math.random() * variance);
+
+// 조선 팔도 출진 스테이지 (7단계, 보상은 매우 적게)
 const STAGES = [
   {
     level: 1,
     name: '뒷골목 깡패 소탕',
-    desc: '마을 뒷골목을 점령한 불량배 무리를 진압하라.',
+    desc: '저잣거리 뒤편을 어지럽히는 불량배를 쫓아내고 빼앗긴 엽전을 되찾는다.',
+    context: '장시와 저잣거리는 물건과 소문이 모이는 곳이다. 길목을 장악한 무리는 마을 살림을 바로 흔든다.',
+    clue: '장터 뒷문에 부러진 곤봉과 흩어진 엽전 자국이 남아 있다.',
     baseChance: 80,
     reward: 5,
     winMsg: '뒷골목 불량배들을 쫓아냈다!',
@@ -140,7 +204,9 @@ const STAGES = [
   {
     level: 2,
     name: '지리산 멧돼지 사냥',
-    desc: '마을 농작물을 쑥대밭으로 만드는 멧돼지 떼를 토벌하라.',
+    desc: '산비탈 밭을 파헤친 멧돼지 떼를 몰아내고 마을의 사례를 받는다.',
+    context: '깊은 산과 밭이 맞닿은 고을에서는 산짐승 피해가 곧 끼니 문제로 이어진다.',
+    clue: '파헤쳐진 밭고랑과 짚신 자국이 지리산 샛길로 이어진다.',
     baseChance: 65,
     reward: 8,
     winMsg: '멧돼지 떼를 산속 깊이 몰아냈다!',
@@ -149,7 +215,9 @@ const STAGES = [
   {
     level: 3,
     name: '백두산 호랑이 격퇴',
-    desc: '백두산에 출몰해 인명 피해를 입히는 산군(山君) 호랑이를 상대하라.',
+    desc: '산군이라 불릴 만큼 두려움의 대상인 호랑이의 흔적을 쫓는다.',
+    context: '한국 민속에서 호랑이는 산의 주인 같은 존재로 여겨졌다. 맞서면 큰 명성을 얻지만 위험도 크다.',
+    clue: '눈 위에 큰 발자국이 찍히고, 나무껍질에는 깊은 발톱 자국이 남았다.',
     baseChance: 50,
     reward: 12,
     winMsg: '호랑이를 굴복시키고 백두산에서 돌아왔다!',
@@ -158,7 +226,9 @@ const STAGES = [
   {
     level: 4,
     name: '홍길동과의 비무',
-    desc: '민초를 돕는 의적 홍길동과의 비무 대결. 이겨야 조선 제일 무사로 인정받는다.',
+    desc: '활빈당 소문을 따라가 홍길동과 무예를 겨룬다.',
+    context: '홍길동은 한국 고전소설 속 의적 이미지가 강하다. 이 조우는 토벌보다 시험에 가깝다.',
+    clue: '나뭇가지에 걸린 붉은 천 조각과 "가난한 집은 건드리지 말라"는 쪽지가 보인다.',
     baseChance: 38,
     reward: 18,
     winMsg: '홍길동도 인정한 무예! 명장으로 칭송받았다!',
@@ -166,8 +236,10 @@ const STAGES = [
   },
   {
     level: 5,
-    name: '왜구 해적 토벌',
-    desc: '남해를 노략질하는 왜구 선단에 침투해 두목을 잡아라.',
+    name: '남해 왜구 소탕',
+    desc: '남해 포구에 들어온 약탈 무리를 막고 빼앗긴 곡식과 물자를 되찾는다.',
+    context: '왜구는 한반도와 중국 연안에서 활동한 해적 집단으로, 조선의 해안 방어에서 중요한 위협이었다.',
+    clue: '젖은 볏섬, 잘린 밧줄, 낡은 왜선의 노 조각이 포구에 떠밀려 왔다.',
     baseChance: 27,
     reward: 25,
     winMsg: '왜구 선단을 격침시키고 바다를 되찾았다!',
@@ -176,16 +248,20 @@ const STAGES = [
   {
     level: 6,
     name: '북방 여진족 철기 격퇴',
-    desc: '북방 변경을 침략한 여진족 기마 철기병을 맞아 싸워라.',
+    desc: '북방 초소를 흔드는 기마 척후를 막는다. 빠른 말과 긴 무기가 위협적이다.',
+    context: '조선 북방 변경에서는 여진 세력과 교역도 있었지만, 생활 물자와 국경 문제로 충돌도 벌어졌다.',
+    clue: '초소 밖 말발굽 자국이 얼어붙은 풀밭을 길게 가르고 있다.',
     baseChance: 18,
     reward: 35,
-    winMsg: '여진족 기병을 몰아내고 변방에 깃발을 꽂았다!',
+    winMsg: '여진족 기병을 몰아내고 북방 초소를 지켜냈다!',
     loseMsg: '말발굽 먼지를 잔뜩 마시고 후퇴했다...',
   },
   {
     level: 7,
-    name: '이무기 토벌 (최종)',
-    desc: '한강 상류에 웅크린 전설의 이무기. 이것을 물리쳐야 조선의 진정한 영웅이 된다.',
+    name: '백색 이무기 격퇴',
+    desc: '강가에 떠도는 이무기 전설의 근원을 확인한다. 가장 큰 보상과 손실이 함께 온다.',
+    context: '이무기는 용이 되지 못한 존재로 전해지는 한국 설화의 상상 동물이다. 물길과 재앙의 이미지가 강하다.',
+    clue: '강가 물안개 속에서 흰 비늘 같은 조각과 뒤틀린 물살이 번쩍인다.',
     baseChance: 10,
     reward: 50,
     winMsg: '이무기를 베어냈다! 조선의 영웅으로 역사에 이름을 새겼다!',
@@ -193,10 +269,382 @@ const STAGES = [
   },
 ];
 
+const DEPLOY_TIER_BONUS = 5;
+const DEPLOY_MIN_CHANCE = 5;
+const DEPLOY_MAX_CHANCE = 82;
+const DEPLOY_BREAK_CHANCE = 12;
+
+const getDeployPassChance = (baseChance, weaponTier) => {
+  const chance = baseChance + (weaponTier - 1) * DEPLOY_TIER_BONUS;
+  return Math.max(DEPLOY_MIN_CHANCE, Math.min(DEPLOY_MAX_CHANCE, chance));
+};
+
+const getDeployBreakChance = (weaponTier) => {
+  return weaponTier > 1 ? DEPLOY_BREAK_CHANCE : 0;
+};
+
+const getDowngradedWeaponState = (currentTier, currentPath, dropAmount) => {
+  const nextTier = Math.max(1, currentTier - dropAmount);
+  return {
+    tier: nextTier,
+    path: nextTier === 1 ? null : currentPath,
+  };
+};
+
+const DEPLOY_SCENES = [
+  {
+    terrain: '한양 뒷골목',
+    enemyName: '골목 두목',
+    enemyIcon: '🥷',
+    enemySrc: getImageUrl('enemy_stage_1.png'),
+    sky: '#334155',
+    ground: '#4a2f25',
+    accent: '#f97316',
+  },
+  {
+    terrain: '지리산 산길',
+    enemyName: '산짐승 무리',
+    enemyIcon: '🐗',
+    enemySrc: getImageUrl('enemy_stage_2.png'),
+    sky: '#1e3a2f',
+    ground: '#365314',
+    accent: '#84cc16',
+  },
+  {
+    terrain: '백두산 설원',
+    enemyName: '산군 호랑이',
+    enemyIcon: '🐅',
+    enemySrc: getImageUrl('enemy_stage_3.png'),
+    sky: '#1d4ed8',
+    ground: '#e0f2fe',
+    accent: '#60a5fa',
+  },
+  {
+    terrain: '활빈당 비무장',
+    enemyName: '홍길동',
+    enemyIcon: '🎭',
+    enemySrc: getImageUrl('enemy_stage_4.png'),
+    sky: '#4c1d95',
+    ground: '#3f2d20',
+    accent: '#c084fc',
+  },
+  {
+    terrain: '남해 왜선 갑판',
+    enemyName: '왜구 약탈꾼',
+    enemyIcon: '🏴‍☠️',
+    enemySrc: getImageUrl('enemy_stage_5.png'),
+    sky: '#0f766e',
+    ground: '#78350f',
+    accent: '#22d3ee',
+  },
+  {
+    terrain: '북방 변경 초원',
+    enemyName: '변경 침입 척후',
+    enemyIcon: '🏇',
+    enemySrc: getImageUrl('enemy_stage_6.png'),
+    sky: '#713f12',
+    ground: '#57534e',
+    accent: '#facc15',
+  },
+  {
+    terrain: '한강 상류',
+    enemyName: '백색 이무기',
+    enemyIcon: '🐉',
+    enemySrc: getImageUrl('enemy_stage_7.png'),
+    sky: '#172554',
+    ground: '#1e40af',
+    accent: '#38bdf8',
+  },
+];
+
+const DEPLOY_ENCOUNTERS = STAGES.map((stage, index) => ({
+  id: `enemy-${index + 1}`,
+  kind: 'enemy',
+  ...stage,
+  storyLevel: index + 1,
+  scene: DEPLOY_SCENES[index],
+}));
+
+const DEPLOY_EVENTS = [
+  {
+    id: 'bond-neighbor-lunch',
+    kind: 'bond',
+    storyLevel: 1,
+    name: '동네 주민의 주먹밥',
+    desc: '마을 주민이 길손에게 주먹밥과 작은 엽전을 건넨다.',
+    context: '팔도 길 위의 출진은 전투만이 아니다. 마을 공동체의 도움도 여정을 이어가게 한다.',
+    clue: '짚으로 묶은 주먹밥 꾸러미에 "무사히 돌아오시오"라는 말이 붙어 있다.',
+    reward: 6,
+    scene: {
+      terrain: '마을 어귀',
+      enemyName: '동네 주민',
+      enemyIcon: '🙋',
+      enemySrc: getImageUrl('bond_neighborhood_resident.png'),
+      sky: '#36514f',
+      ground: '#4b3a28',
+      accent: '#86efac',
+    },
+    logs: [
+      '동네 주민이 주먹밥을 건넸다.',
+      '마을 어귀에서 작은 도움을 받았다.',
+      '주민들이 무사 귀환을 빌어주었다.'
+    ],
+    nextEncounterIds: ['enemy-1', 'treasure-old-chest'],
+    nextHint: '주민이 뒷골목 소문을 알려주었다.',
+  },
+  {
+    id: 'bond-village-teacher',
+    kind: 'bond',
+    storyLevel: 2,
+    name: '훈장님의 한마디',
+    desc: '서당 훈장님이 고갯길의 소문을 짚어주고 여비를 보태준다.',
+    context: '서당은 훈장과 학동이 글을 익히던 사립 교육 공간이다. 마을 소문과 길 정보도 이곳에 모인다.',
+    clue: '천자문 책장 사이에 고갯길 이름이 적힌 종이가 끼워져 있다.',
+    reward: 7,
+    scene: {
+      terrain: '서당 앞길',
+      enemyName: '훈장님',
+      enemyIcon: '📜',
+      enemySrc: getImageUrl('bond_village_teacher.png'),
+      sky: '#334155',
+      ground: '#5b4630',
+      accent: '#facc15',
+    },
+    logs: [
+      '훈장님이 안전한 길을 알려주었다.',
+      '훈장님이 여비 몇 닢을 보태주었다.',
+      '서당 아이들이 응원해 주었다.'
+    ],
+    nextEncounterIds: ['hazard-bandit-tax', 'treasure-old-chest'],
+    nextHint: '훈장님이 수상한 고갯길을 조심하라고 일러주었다.',
+  },
+  {
+    id: 'bond-traveling-doctor',
+    kind: 'bond',
+    storyLevel: 4,
+    name: '떠돌이 의원의 치료',
+    desc: '떠돌이 의원이 상처를 살피고 산길에서 쓸 약초 꾸러미를 나눠준다.',
+    context: '장거리 길에서는 병과 상처가 곧 손실이다. 의원과 약초 지식은 전투 못지않은 힘이 된다.',
+    clue: '마른 쑥 냄새가 나는 약초 꾸러미에 진흙 협곡을 피하라는 표시가 있다.',
+    reward: 9,
+    scene: {
+      terrain: '약초 냄새 나는 산길',
+      enemyName: '떠돌이 의원',
+      enemyIcon: '🧪',
+      enemySrc: getImageUrl('bond_traveling_doctor.png'),
+      sky: '#1e3a2f',
+      ground: '#365314',
+      accent: '#34d399',
+    },
+    logs: [
+      '의원이 상처를 봐주었다.',
+      '약초 꾸러미를 받았다.',
+      '의원이 길에서 쓸 물자를 나눠주었다.'
+    ],
+    nextEncounterIds: ['hazard-muddy-ravine', 'enemy-3'],
+    nextHint: '의원이 진흙 협곡과 산짐승 흔적을 알려주었다.',
+  },
+  {
+    id: 'treasure-old-chest',
+    kind: 'treasure',
+    storyLevel: 2,
+    name: '낡은 보물상자 발견',
+    desc: '버려진 산길의 낡은 궤짝을 발견한다. 보상 뒤에 다음 흔적이 숨어 있다.',
+    context: '길목의 상자는 우연한 횡재이기도 하지만, 누군가 숨기거나 버린 물건이라는 단서가 되기도 한다.',
+    clue: '상자 주변 발자국이 수상한 길목으로 이어진다.',
+    reward: 12,
+    scene: {
+      terrain: '버려진 산길',
+      enemyName: '낡은 보물상자',
+      enemyIcon: '🧰',
+      enemySrc: getImageUrl('event_old_chest.png'),
+      sky: '#315061',
+      ground: '#4d3a22',
+      accent: '#fbbf24',
+    },
+    logs: [
+      '보물상자를 열었다.',
+      '숨겨진 전리품을 찾았다.',
+      '덫 없이 보상만 챙겼다.'
+    ],
+    nextEncounterIds: ['hazard-bandit-tax'],
+    nextHint: '상자 주변 발자국이 수상한 길목으로 이어진다.',
+  },
+  {
+    id: 'event-merchant-escort',
+    kind: 'event',
+    storyLevel: 3,
+    name: '길 잃은 상단 호위',
+    desc: '길을 잃은 보부상 무리를 장터까지 호위하고 사례를 받는다.',
+    context: '보부상은 봇짐과 등짐으로 물화를 옮기던 행상이다. 장시와 길목의 소문을 가장 빨리 듣는다.',
+    clue: '등짐장수의 지게에 남해 포구 약탈 소문이 적힌 장부가 묶여 있다.',
+    reward: 10,
+    scene: {
+      terrain: '장터로 가는 고갯길',
+      enemyName: '길 잃은 상단',
+      enemyIcon: '🧳',
+      enemySrc: getImageUrl('event_merchant_escort.png'),
+      sky: '#36514f',
+      ground: '#5b4630',
+      accent: '#34d399',
+    },
+    logs: [
+      '상단을 안전하게 안내했다.',
+      '상단을 마을까지 데려다주었다.',
+      '사례금을 받았다.'
+    ],
+    nextEncounterIds: ['enemy-5', 'event-abandoned-supplies'],
+    nextHint: '상단이 남해 쪽 약탈 소문을 전해주었다.',
+  },
+  {
+    id: 'event-forge-shrine',
+    kind: 'event',
+    storyLevel: 4,
+    name: '산신 제단의 불씨',
+    desc: '산신 제단에 남은 불씨와 공물을 살핀다. 작은 보상과 이상한 전조가 함께 있다.',
+    context: '산과 마을을 잇는 제단은 민속 신앙의 흔적이다. 도움처럼 보여도 다음 위험을 부를 수 있다.',
+    clue: '꺼지지 않은 불씨가 강가 쪽으로만 푸른 연기를 흘린다.',
+    reward: 8,
+    scene: {
+      terrain: '산신 제단',
+      enemyName: '꺼지지 않은 불씨',
+      enemyIcon: '🔥',
+      enemySrc: getImageUrl('event_forge_shrine.png'),
+      sky: '#3f2b1b',
+      ground: '#432818',
+      accent: '#fb923c',
+    },
+    logs: [
+      '제단의 불씨를 챙겼다.',
+      '불씨 옆에서 전리품을 찾았다.',
+      '작은 엽전 꾸러미를 발견했다.'
+    ],
+    nextEncounterIds: ['enemy-7', 'hazard-muddy-ravine'],
+    nextHint: '불씨가 강가 쪽 위험한 기운을 가리켰다.',
+  },
+  {
+    id: 'event-abandoned-supplies',
+    kind: 'treasure',
+    storyLevel: 5,
+    name: '버려진 군량 꾸러미',
+    desc: '폐초소에 버려진 군량과 잡물을 챙긴다. 북방 길목의 흔적이 뚜렷하다.',
+    context: '초소와 군량은 변경 방어의 생활감 있는 흔적이다. 남은 물자는 보상이지만 추격의 단서가 된다.',
+    clue: '찢어진 군량 자루 옆으로 말발굽이 찍힌 진흙이 말라붙어 있다.',
+    reward: 15,
+    scene: {
+      terrain: '폐허가 된 초소',
+      enemyName: '군량 꾸러미',
+      enemyIcon: '🎁',
+      enemySrc: getImageUrl('event_abandoned_supplies.png'),
+      sky: '#4b5563',
+      ground: '#3f3f46',
+      accent: '#a3e635',
+    },
+    logs: [
+      '군량 꾸러미를 챙겼다.',
+      '낡은 항아리에서 엽전을 찾았다.',
+      '팔 수 있는 물건을 챙겼다.'
+    ],
+    nextEncounterIds: ['enemy-6'],
+    nextHint: '군량 흔적이 북방 기병의 길목으로 이어진다.',
+  },
+  {
+    id: 'hazard-bandit-tax',
+    kind: 'hazard',
+    storyLevel: 3,
+    name: '수상한 길목 통행세',
+    desc: '고갯길에서 통행세를 내라며 버티는 수상한 무리를 만난다.',
+    context: '장터와 고갯길은 사람과 물자가 오가는 곳이다. 길목을 잡은 무리는 작은 손실을 큰 위험으로 만든다.',
+    clue: '나무 푯말에는 관청 표식이 없고, 새로 판 흙더미만 길가에 남아 있다.',
+    reward: -10,
+    scene: {
+      terrain: '안개 낀 고갯길',
+      enemyName: '수상한 통행세',
+      enemyIcon: '⚠️',
+      enemySrc: getImageUrl('hazard_bandit_tax.png'),
+      sky: '#374151',
+      ground: '#27272a',
+      accent: '#f87171',
+    },
+    logs: [
+      '통행세를 빼앗겼다.',
+      '엽전 주머니가 가벼워졌다.',
+      '전리품 일부를 잃었다.'
+    ],
+  },
+  {
+    id: 'hazard-muddy-ravine',
+    kind: 'hazard',
+    storyLevel: 5,
+    name: '진흙 협곡 낙상',
+    desc: '비에 무너진 협곡 길을 건넌다. 전리품 손실과 무기 손상이 모두 가능하다.',
+    context: '팔도 길의 위험은 적만이 아니다. 산길과 물길, 날씨도 출진의 비용을 만든다.',
+    clue: '흙탕물에 수레바퀴 자국이 끊기고, 아래쪽에서 금속 긁히는 소리가 난다.',
+    reward: -16,
+    weaponDamageChance: 25,
+    scene: {
+      terrain: '진흙 협곡',
+      enemyName: '무너지는 진흙길',
+      enemyIcon: '🕳️',
+      enemySrc: getImageUrl('hazard_muddy_ravine.png'),
+      sky: '#3b2f2f',
+      ground: '#292524',
+      accent: '#f59e0b',
+    },
+    logs: [
+      '진흙길에서 미끄러졌다.',
+      '짐 일부를 잃고 빠져나왔다.',
+      '전리품 일부가 협곡 아래로 떨어졌다.'
+    ],
+  },
+];
+
+const DEPLOY_ALL_ENCOUNTERS = [...DEPLOY_ENCOUNTERS, ...DEPLOY_EVENTS];
+
+const getDeployEncounterById = (id) => {
+  if (typeof id === 'number') {
+    return DEPLOY_ENCOUNTERS[id - 1] || DEPLOY_ENCOUNTERS[0];
+  }
+  return DEPLOY_ALL_ENCOUNTERS.find(encounter => encounter.id === id) || DEPLOY_ENCOUNTERS[0];
+};
+
+const pickDeployEncounter = (runIndex) => {
+  const targetLevel = runIndex + 1;
+  const enemyWeighted = DEPLOY_ENCOUNTERS.map((encounter) => {
+    const distance = Math.abs(encounter.storyLevel - targetLevel);
+    let weight = Math.max(0.8, 24 / (distance + 1));
+
+    if (encounter.storyLevel > targetLevel) {
+      weight *= Math.max(0.22, 0.72 - distance * 0.08);
+    }
+
+    if (encounter.storyLevel < targetLevel) {
+      weight *= Math.max(0.5, 1 - (targetLevel - encounter.storyLevel) * 0.06);
+    }
+
+    return { encounter, weight };
+  });
+  const eventWeighted = DEPLOY_EVENTS.map((encounter) => {
+    const distance = Math.abs(encounter.storyLevel - targetLevel);
+    return { encounter, weight: Math.max(1.4, 5 - distance * 0.8) };
+  });
+  const weighted = [...enemyWeighted, ...eventWeighted];
+
+  const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
+  let roll = Math.random() * totalWeight;
+
+  for (const item of weighted) {
+    roll -= item.weight;
+    if (roll <= 0) return item.encounter;
+  }
+
+  return weighted[weighted.length - 1].encounter;
+};
+
 const getMidnightNews = (maxTier, maxPath) => {
   const dateStr = `조선 16XX년 O월 O일 (대장간 일보)`;
-  let title = "";
-  let body = "";
+  let title;
+  let body;
 
   if (maxTier === 7) {
     if (maxPath === '1H') {
@@ -397,7 +845,7 @@ const COMBAT_STORIES = {
   },
   6: {
     winLogs: [
-      "여진족 기병을 몰아내고 변방에 깃발을 꽂았다!",
+      "여진족 기병을 몰아내고 북방 초소를 지켜냈다!",
       "여진족의 갑옷을 일격에 베어내고 철기병의 추격을 와해시켰다!",
       "적의 기마 대장을 말 위에서 단숨에 떨어뜨리고 북방 영토를 수호했다!"
     ],
@@ -468,42 +916,119 @@ const COMBAT_STORIES = {
 };
 
 
-const getCombatNews = (stageLevel, isWin, weaponName, tier) => {
+const getCombatNews = (stageLevel, isWin, weaponName, tier, enemyName = '적') => {
   const titleDate = "조선 16XX년 O월 O일 (한성 일보 속보)";
   const formattedWeapon = `+${tier} [${weaponName}]`;
+
+  if (!isWin) {
+    return {
+      titleDate,
+      headline: `패배: ${enemyName} 조우에서 철수`,
+      body: `${formattedWeapon}으로 맞섰지만 버티지 못했습니다. 이번 출진은 손실이 날 수 있으며, 무기가 손상되었을 수도 있습니다.`
+    };
+  }
+
+  if (stageLevel < STAGES.length) {
+    return {
+      titleDate,
+      headline: `귀환: ${enemyName}까지 돌파`,
+      body: `${formattedWeapon}으로 조우를 넘기고 귀환했습니다. 얻은 전리품은 대장간에 정산됩니다.`
+    };
+  }
 
   const storyData = COMBAT_STORIES[stageLevel];
   if (!storyData) {
     return {
       titleDate,
-      headline: `⚔️ 전투 보고: 주인공, 변방에서 생환!`,
-      body: `주인공이 ${formattedWeapon}을(를) 들고 용맹하게 싸우다 돌아왔습니다.`
+      headline: isWin
+        ? `⚔️ 전투 보고: 주인공, 조선 팔도 출진 완수!`
+        : `⚔️ 전투 보고: 주인공, 조선 팔도 출진에서 생환!`,
+      body: isWin
+        ? `주인공이 ${formattedWeapon}을(를) 들고 ${enemyName}까지 꺾으며 조선 팔도 출진을 끝까지 완수했습니다.`
+        : `주인공이 ${formattedWeapon}을(를) 들고 ${enemyName}에게 맞서다 가까스로 돌아왔습니다.`
     };
   }
 
-  let options = [];
-  if (isWin && stageLevel === 7) {
-    options = storyData.news.win || [];
-  } else {
-    options = storyData.news.lose || [];
-  }
+  const options = isWin && stageLevel === 7
+    ? storyData.news.win || []
+    : storyData.news.lose || [];
 
   if (options.length === 0) {
     return {
       titleDate,
-      headline: `⚔️ 전투 보고: 주인공, 변방에서 생환!`,
-      body: `주인공이 ${formattedWeapon}을(를) 들고 용맹하게 싸우다 돌아왔습니다.`
+      headline: isWin
+        ? `⚔️ 전투 보고: ${enemyName} 격퇴, 조선 팔도 출진 완수!`
+        : `⚔️ 전투 보고: 주인공, 조선 팔도 출진에서 생환!`,
+      body: isWin
+        ? `주인공이 ${formattedWeapon}을(를) 들고 마지막 조우에서 ${enemyName}을(를) 물리쳤다. 험한 임무를 일곱 차례 넘긴 끝에 대장간에는 전리품과 함께 요란한 환호가 울려 퍼졌다.`
+        : `주인공이 ${formattedWeapon}을(를) 들고 ${enemyName}에게 맞서다 가까스로 돌아왔습니다.`
     };
   }
 
   // Pick a random option
   const selected = options[Math.floor(Math.random() * options.length)];
-  
+
   // Format placeholders
   const headline = selected.headline.replace(/{weapon}/g, formattedWeapon);
   const body = selected.body.replace(/{weapon}/g, formattedWeapon);
 
   return { titleDate, headline, body };
+};
+
+const getDeploymentFinalNews = (encounter, weaponName, tier, reward) => {
+  if (encounter.kind === 'enemy') {
+    return getCombatNews(encounter.storyLevel, true, weaponName, tier, encounter.name);
+  }
+
+  const titleDate = "조선 16XX년 O월 O일 (한성 일보 속보)";
+  const formattedWeapon = `+${tier} [${weaponName}]`;
+  const rewardText = reward >= 0 ? `+${reward} 냥` : `-${Math.abs(reward)} 냥`;
+  const contextText = encounter.context ? ` ${encounter.context}` : '';
+  const clueText = encounter.clue ? ` 현장 단서로는 ${encounter.clue}` : '';
+  const settlementText = `최종 정산은 ${rewardText}입니다.`;
+
+  if (encounter.kind === 'bond') {
+    return {
+      titleDate,
+      headline: `인연: ${encounter.name}`,
+      body: `${formattedWeapon}을(를) 들고 길 위에서 ${encounter.scene.enemyName}을(를) 만났습니다.${contextText}${clueText} 작은 도움은 전투보다 조용했지만, 다음 조우를 이어갈 힘이 되었습니다. ${settlementText}`
+    };
+  }
+
+  if (encounter.kind === 'hazard') {
+    return {
+      titleDate,
+      headline: `위험: ${encounter.name}`,
+      body: `${formattedWeapon} 출진 중 ${encounter.name}에 휘말렸습니다.${contextText}${clueText} 이번 사건은 팔도 출진에서 적보다 길과 날씨, 사람의 욕심이 더 큰 손실을 만들 수 있음을 보여줍니다. ${settlementText}`
+    };
+  }
+
+  if (encounter.kind === 'treasure') {
+    return {
+      titleDate,
+      headline: `수확: ${encounter.name}`,
+      body: `${formattedWeapon} 출진 중 ${encounter.name}을(를) 확인했습니다.${contextText}${clueText} 전투 없는 수확처럼 보여도, 남은 흔적은 다음 위험이나 새 인연으로 이어질 수 있습니다. ${settlementText}`
+    };
+  }
+
+  return {
+    titleDate,
+    headline: `사건: ${encounter.name}`,
+    body: `${formattedWeapon} 출진 중 ${encounter.name}을(를) 겪었습니다.${contextText}${clueText} ${settlementText}`
+  };
+};
+
+const getDeploymentLoss = (accReward, storyLevel) => {
+  const lossAmount = 8 + storyLevel * 3 + Math.floor(Math.random() * 8);
+  const lootLoss = Math.min(accReward, lossAmount);
+  const goldLoss = lossAmount - lootLoss;
+
+  return {
+    lossAmount,
+    lootLoss,
+    goldLoss,
+    netReward: accReward - lootLoss - goldLoss,
+  };
 };
 
 const ChromaKeyImage = ({ src, alt, className = "", style = {}, onError = null }) => {
@@ -513,9 +1038,9 @@ const ChromaKeyImage = ({ src, alt, className = "", style = {}, onError = null }
   useEffect(() => {
     setHasError(false);
     setProcessedSrc('');
-    
+
     if (!src) return;
-    
+
     const img = new Image();
     img.src = src;
     img.onload = () => {
@@ -525,23 +1050,70 @@ const ChromaKeyImage = ({ src, alt, className = "", style = {}, onError = null }
         canvas.height = img.height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
-        
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+        const { width, height } = canvas;
+        const imgData = ctx.getImageData(0, 0, width, height);
         const data = imgData.data;
-        
-        // Remove white or off-white background pixels (R > 240, G > 240, B > 240)
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          
-          if (r > 240 && g > 240 && b > 240) {
-            data[i + 3] = 0; // set alpha to 0
-          }
+
+        const cornerOffsets = [
+          0,
+          (width - 1) * 4,
+          (height - 1) * width * 4,
+          (height * width - 1) * 4,
+        ];
+        const seeds = cornerOffsets.map(offset => [data[offset], data[offset + 1], data[offset + 2]]);
+        const toleranceSq = 42 * 42;
+        const visited = new Uint8Array(width * height);
+        const queue = new Int32Array(width * height);
+        let head = 0;
+        let tail = 0;
+
+        const isBackground = (pixelIndex) => {
+          const offset = pixelIndex * 4;
+          if (data[offset + 3] === 0) return false;
+          const r = data[offset];
+          const g = data[offset + 1];
+          const b = data[offset + 2];
+          return seeds.some(([sr, sg, sb]) => {
+            const dr = r - sr;
+            const dg = g - sg;
+            const db = b - sb;
+            return dr * dr + dg * dg + db * db <= toleranceSq;
+          });
+        };
+
+        const enqueue = (pixelIndex) => {
+          if (visited[pixelIndex] || !isBackground(pixelIndex)) return;
+          visited[pixelIndex] = 1;
+          queue[tail] = pixelIndex;
+          tail += 1;
+        };
+
+        for (let x = 0; x < width; x += 1) {
+          enqueue(x);
+          enqueue((height - 1) * width + x);
         }
+        for (let y = 0; y < height; y += 1) {
+          enqueue(y * width);
+          enqueue(y * width + width - 1);
+        }
+
+        while (head < tail) {
+          const pixelIndex = queue[head];
+          head += 1;
+          data[pixelIndex * 4 + 3] = 0;
+
+          const x = pixelIndex % width;
+          const y = Math.floor(pixelIndex / width);
+          if (x > 0) enqueue(pixelIndex - 1);
+          if (x + 1 < width) enqueue(pixelIndex + 1);
+          if (y > 0) enqueue(pixelIndex - width);
+          if (y + 1 < height) enqueue(pixelIndex + width);
+        }
+
         ctx.putImageData(imgData, 0, 0);
         setProcessedSrc(canvas.toDataURL());
-      } catch (e) {
+      } catch {
         setProcessedSrc(src);
       }
     };
@@ -549,17 +1121,17 @@ const ChromaKeyImage = ({ src, alt, className = "", style = {}, onError = null }
       setHasError(true);
       if (onError) onError();
     };
-  }, [src]);
+  }, [src, onError]);
 
   if (hasError) {
     return <div className="image-fallback">⚠️</div>;
   }
 
   return (
-    <img 
-      src={processedSrc || src} 
-      alt={alt} 
-      className={className} 
+    <img
+      src={processedSrc || src}
+      alt={alt}
+      className={className}
       style={{ ...style, opacity: processedSrc ? 1 : 0.5, transition: 'opacity 0.2s' }}
     />
   );
@@ -568,7 +1140,8 @@ const ChromaKeyImage = ({ src, alt, className = "", style = {}, onError = null }
 const WeaponImage = ({ path, tier, name, className = "weapon-image" }) => {
   const [hasError, setHasError] = useState(false);
 
-  const src = tier === 1 ? '/images/weapon_1.png' : `/images/weapon_${path}_${tier}.png`;
+  const src = tier === 1 ? getImageUrl('weapon_1.png') : getImageUrl(`weapon_${path}_${tier}.png`);
+  const handleError = useCallback(() => setHasError(true), []);
 
   if (hasError) {
     return (
@@ -579,13 +1152,147 @@ const WeaponImage = ({ path, tier, name, className = "weapon-image" }) => {
   }
 
   return (
-    <ChromaKeyImage 
-      src={src} 
-      alt={name} 
-      className={className} 
-      onError={() => setHasError(true)} 
+    <ChromaKeyImage
+      src={src}
+      alt={name}
+      className={className}
+      onError={handleError}
     />
   );
+};
+
+const EnemyImage = ({ src, name, fallback, className = "battle-enemy-img" }) => {
+  const [hasError, setHasError] = useState(false);
+  const handleError = useCallback(() => setHasError(true), []);
+
+  if (hasError || !src) {
+    return <span className="battle-enemy-fallback">{fallback}</span>;
+  }
+
+  return (
+    <ChromaKeyImage
+      src={src}
+      alt={name}
+      className={className}
+      onError={handleError}
+    />
+  );
+};
+
+let sharedAudioContext = null;
+
+const getAudioContext = () => {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+
+  if (!sharedAudioContext) {
+    sharedAudioContext = new AudioContextClass();
+  }
+
+  if (sharedAudioContext.state === 'suspended') {
+    sharedAudioContext.resume().catch(() => {});
+  }
+
+  return sharedAudioContext;
+};
+
+const playTone = (ctx, { freq, duration, type = 'sine', start = 0, volume = 0.08, bendTo = null }) => {
+  const now = ctx.currentTime + start;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  if (bendTo) {
+    osc.frequency.exponentialRampToValueAtTime(bendTo, now + duration);
+  }
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + duration + 0.03);
+};
+
+const playNoise = (ctx, { duration = 0.12, start = 0, volume = 0.04, filterFreq = 900 }) => {
+  const now = ctx.currentTime + start;
+  const buffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * duration)), ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+
+  for (let i = 0; i < data.length; i += 1) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  }
+
+  const source = ctx.createBufferSource();
+  const filter = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+
+  source.buffer = buffer;
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(filterFreq, now);
+  gain.gain.setValueAtTime(volume, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  source.start(now);
+  source.stop(now + duration + 0.02);
+};
+
+const playSoundEffect = (name, enabled) => {
+  if (!enabled) return;
+
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  if (name === 'hammer') {
+    playNoise(ctx, { duration: 0.1, volume: 0.06, filterFreq: 1400 });
+    playTone(ctx, { freq: 180, bendTo: 95, duration: 0.12, type: 'square', volume: 0.045 });
+    playTone(ctx, { freq: 760, bendTo: 420, duration: 0.08, type: 'triangle', volume: 0.035 });
+  } else if (name === 'coin') {
+    playTone(ctx, { freq: 880, duration: 0.07, type: 'triangle', volume: 0.04 });
+    playTone(ctx, { freq: 1320, duration: 0.08, type: 'triangle', start: 0.06, volume: 0.035 });
+  } else if (name === 'success') {
+    playTone(ctx, { freq: 523, duration: 0.09, type: 'triangle', volume: 0.05 });
+    playTone(ctx, { freq: 659, duration: 0.09, type: 'triangle', start: 0.08, volume: 0.05 });
+    playTone(ctx, { freq: 784, duration: 0.16, type: 'triangle', start: 0.16, volume: 0.055 });
+  } else if (name === 'tension') {
+    playTone(ctx, { freq: 196, bendTo: 330, duration: 0.42, type: 'triangle', volume: 0.026 });
+    playTone(ctx, { freq: 247, bendTo: 415, duration: 0.42, type: 'sine', start: 0.16, volume: 0.022 });
+    playNoise(ctx, { duration: 0.5, start: 0.04, volume: 0.012, filterFreq: 1500 });
+  } else if (name === 'near-success') {
+    playTone(ctx, { freq: 659, duration: 0.11, type: 'triangle', volume: 0.036 });
+    playTone(ctx, { freq: 784, duration: 0.14, type: 'triangle', start: 0.1, volume: 0.038 });
+    playTone(ctx, { freq: 988, duration: 0.18, type: 'sine', start: 0.2, volume: 0.03 });
+  } else if (name === 'fail') {
+    playNoise(ctx, { duration: 0.22, volume: 0.055, filterFreq: 360 });
+    playTone(ctx, { freq: 180, bendTo: 82, duration: 0.24, type: 'sawtooth', volume: 0.04 });
+  } else if (name === 'crack') {
+    playNoise(ctx, { duration: 0.08, volume: 0.05, filterFreq: 2400 });
+    playTone(ctx, { freq: 1180, bendTo: 520, duration: 0.12, type: 'triangle', volume: 0.032 });
+  } else if (name === 'shatter') {
+    playNoise(ctx, { duration: 0.08, volume: 0.07, filterFreq: 2600 });
+    playNoise(ctx, { duration: 0.16, start: 0.06, volume: 0.06, filterFreq: 900 });
+    playNoise(ctx, { duration: 0.24, start: 0.14, volume: 0.045, filterFreq: 420 });
+    playTone(ctx, { freq: 980, bendTo: 220, duration: 0.2, type: 'triangle', start: 0.02, volume: 0.04 });
+    playTone(ctx, { freq: 196, bendTo: 73, duration: 0.34, type: 'sawtooth', start: 0.08, volume: 0.035 });
+  } else if (name === 'deploy') {
+    playTone(ctx, { freq: 196, duration: 0.08, type: 'square', volume: 0.035 });
+    playTone(ctx, { freq: 294, duration: 0.1, type: 'square', start: 0.08, volume: 0.038 });
+    playNoise(ctx, { duration: 0.18, start: 0.03, volume: 0.025, filterFreq: 700 });
+  } else if (name === 'combat-hit') {
+    playNoise(ctx, { duration: 0.12, volume: 0.065, filterFreq: 1100 });
+    playTone(ctx, { freq: 260, bendTo: 130, duration: 0.1, type: 'square', volume: 0.04 });
+  } else if (name === 'page') {
+    playNoise(ctx, { duration: 0.08, volume: 0.025, filterFreq: 1800 });
+    playTone(ctx, { freq: 440, duration: 0.05, type: 'triangle', volume: 0.025 });
+  } else if (name === 'wrong') {
+    playTone(ctx, { freq: 220, bendTo: 146, duration: 0.16, type: 'sawtooth', volume: 0.035 });
+  }
 };
 
 function App() {
@@ -613,30 +1320,72 @@ function App() {
       return null;
     }
   });
-  const [currentQuiz, setCurrentQuiz] = useState(generateMathQuiz());
+  const [currentQuiz, setCurrentQuiz] = useState(() => generateMathQuiz(QUIZ_MODES.MULTIPLICATION));
   const [logs, setLogs] = useState([]);
   const [showQuizModal, setShowQuizModal] = useState(false);
-  
+  const [quizPurpose, setQuizPurpose] = useState('gold');
+  const [viewportMode, setViewportMode] = useState(getViewportMode);
+  const [isViewportModeManual, setIsViewportModeManual] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(() => {
+    try {
+      return Boolean(document.fullscreenElement);
+    } catch {
+      return false;
+    }
+  });
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('soundEnabled') !== 'false';
+    } catch {
+      return true;
+    }
+  });
+
   // Deploy (출전) states
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [deployStep, setDeployStep] = useState(0); // index of current stage (0 to 6)
   const [deployLogs, setDeployLogs] = useState({}); // { 0: [...logs for stage 1], 1: [...logs for stage 2], ... }
-  const [deployStatus, setDeployStatus] = useState('idle'); // 'idle' | 'fighting' | 'finished'
+  const [deployEncounters, setDeployEncounters] = useState({}); // { 0: encounter id, 1: encounter id, ... }
+  const [deployStatus, setDeployStatus] = useState('idle'); // 'idle' | 'fighting' | 'decision' | 'finished'
   const [deployReward, setDeployReward] = useState(0);
+  const [deployWeaponBroken, setDeployWeaponBroken] = useState(false);
+  const [deployDecision, setDeployDecision] = useState(null); // { nextIndex, reward, completedIndex }
+  const [lastDeploymentAt, setLastDeploymentAt] = useState(() => {
+    try {
+      const saved = localStorage.getItem('lastDeploymentAt');
+      const parsed = saved ? parseInt(saved, 10) : 0;
+      return Number.isFinite(parsed) ? parsed : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [deployQuizCharge, setDeployQuizCharge] = useState(() => {
+    try {
+      const saved = localStorage.getItem('deployQuizCharge');
+      const parsed = saved ? parseInt(saved, 10) : 0;
+      return Number.isFinite(parsed) ? Math.min(parsed, DEPLOY_QUIZ_REQUIRED) : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [nowTick, setNowTick] = useState(Date.now());
   const [combatShake, setCombatShake] = useState(false);
   const [newsReport, setNewsReport] = useState(null);
 
   // Page Navigation states
   const [currentDeployPage, setCurrentDeployPage] = useState(1); // 1-indexed (1 to 8: pages 1-7 are stages, page 8 is news)
   const [maxReachedPage, setMaxReachedPage] = useState(1); // max page unlocked so far
-  
+
   // Animation states
   const [floatingTexts, setFloatingTexts] = useState([]);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhancementPhase, setEnhancementPhase] = useState('idle'); // 'idle' | 'hammering' | 'judging'
   const [isStriking, setIsStriking] = useState(false);
   const [particles, setParticles] = useState([]);
   const [strikeTexts, setStrikeTexts] = useState([]);
-  const [outcome, setOutcome] = useState(null); // 'success', 'fail'
+  const [outcome, setOutcome] = useState(null); // 'success', 'fail', 'bonus', 'fakeout', 'false-bonus'
+  const [outcomeWeaponName, setOutcomeWeaponName] = useState('');
+  const [bonusUpgradeNotice, setBonusUpgradeNotice] = useState('');
   const [flashClass, setFlashClass] = useState('');
 
   // Blacksmith Apology & Recovery states
@@ -645,12 +1394,48 @@ function App() {
   const [recoveryQuiz, setRecoveryQuiz] = useState(null); // { step, correct, answers: [] }
 
   const deployLogViewerRef = useRef(null);
+  const nextDeployEncounterRef = useRef(null);
 
   useEffect(() => {
     if (deployLogViewerRef.current) {
       deployLogViewerRef.current.scrollTop = deployLogViewerRef.current.scrollHeight;
     }
   }, [deployLogs, currentDeployPage]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (!isViewportModeManual) {
+        setViewportMode(getViewportMode());
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isViewportModeManual]);
+
+  useEffect(() => {
+    document.documentElement.dataset.displayMode = VIEW_MODE_CLASS[viewportMode] || 'board';
+  }, [viewportMode]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    if (!lastDeploymentAt) return undefined;
+
+    const timerId = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(timerId);
+  }, [lastDeploymentAt]);
 
   const [unlockedWeapons, setUnlockedWeapons] = useState(() => {
     try {
@@ -683,6 +1468,62 @@ function App() {
   const [activeTab, setActiveTab] = useState('1H');
   const [selectedGalleryItem, setSelectedGalleryItem] = useState({ key: 'common_1', item: WEAPON_TREE.common[1], path: 'common', tier: 1 });
 
+  const addLog = (msg, type = 'info') => {
+    setLogs(prev => [{ id: Date.now() + Math.random(), msg, type }, ...prev].slice(0, 5));
+  };
+
+  const playSfx = useCallback((name) => {
+    playSoundEffect(name, soundEnabled);
+  }, [soundEnabled]);
+
+  const cycleViewportMode = () => {
+    playSfx('page');
+    setIsViewportModeManual(true);
+    setViewportMode(currentMode => {
+      const currentIndex = VIEW_MODES.indexOf(currentMode);
+      const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % VIEW_MODES.length : 0;
+      return VIEW_MODES[nextIndex];
+    });
+  };
+
+  const toggleFullscreen = async () => {
+    playSfx('page');
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch {
+      addLog(`전체화면 전환을 사용할 수 없습니다.`, 'warning');
+    }
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('soundEnabled', soundEnabled ? 'true' : 'false');
+    } catch (e) {
+      console.error(e);
+    }
+  }, [soundEnabled]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('lastDeploymentAt', lastDeploymentAt.toString());
+    } catch (e) {
+      console.error(e);
+    }
+  }, [lastDeploymentAt]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('deployQuizCharge', deployQuizCharge.toString());
+    } catch (e) {
+      console.error(e);
+    }
+  }, [deployQuizCharge]);
+
   useEffect(() => {
     try {
       localStorage.setItem('unlockedWeapons', JSON.stringify(unlockedWeapons));
@@ -711,18 +1552,18 @@ function App() {
   useEffect(() => {
     const todayStr = getTodayStr();
     const savedLastDate = localStorage.getItem('lastAccessDate');
-    
+
     if (savedLastDate && savedLastDate !== todayStr) {
       // A new day has passed! Load previous max stats to show in the newspaper
       const savedMaxTier = localStorage.getItem('maxTierToday');
       const savedMaxPath = localStorage.getItem('maxPathToday');
-      
+
       const prevMaxTier = savedMaxTier ? parseInt(savedMaxTier, 10) : 1;
       const prevMaxPath = savedMaxPath === 'null' ? null : (savedMaxPath || null);
-      
+
       setMaxTierToday(prevMaxTier);
       setMaxPathToday(prevMaxPath);
-      
+
       // Open the Newspaper report immediately
       setShowNewspaperModal(true);
       addLog(`🌅 새로운 조선의 아침이 밝아 전날의 결산 일보가 도착했습니다.`, 'warning');
@@ -764,37 +1605,73 @@ function App() {
     });
   };
 
-  const addLog = (msg, type = 'info') => {
-    setLogs(prev => [{ id: Date.now() + Math.random(), msg, type }, ...prev].slice(0, 5));
+  const weaponName = getWeaponNameByState(tier, path);
+  const displayedOutcomeWeaponName = outcomeWeaponName || weaponName;
+  const outcomeWeaponLabel = outcome === 'success'
+    ? `성공이다! ${displayedOutcomeWeaponName}`
+    : outcome === 'bonus'
+      ? `대성공! ${displayedOutcomeWeaponName}`
+      : outcome === 'fakeout'
+        ? `될 듯하다... ${displayedOutcomeWeaponName}`
+        : outcome === 'false-bonus'
+          ? `여기서 멈췄다... ${displayedOutcomeWeaponName}`
+          : outcome === 'fail'
+            ? `실패다! ${displayedOutcomeWeaponName}`
+            : weaponName;
+
+  const deployCooldownRemaining = Math.max(0, DEPLOY_COOLDOWN_MS - (nowTick - lastDeploymentAt));
+  const isDeployCooldownReady = !lastDeploymentAt || deployCooldownRemaining <= 0;
+  const isDeployQuizReady = deployQuizCharge >= DEPLOY_QUIZ_REQUIRED;
+  const canStartDeployment = isDeployCooldownReady || isDeployQuizReady;
+  const deployQuizRemaining = Math.max(0, DEPLOY_QUIZ_REQUIRED - deployQuizCharge);
+
+  const openGoldQuiz = () => {
+    setQuizPurpose('gold');
+    setCurrentQuiz(generateMathQuiz(QUIZ_MODES.MULTIPLICATION));
+    setShowQuizModal(true);
   };
 
-  let weaponName = WEAPON_TREE.common[1].name;
-  if (tier > 1 && path) {
-    weaponName = WEAPON_TREE[path][tier].name;
-  }
+  const openDeployQuiz = () => {
+    setQuizPurpose('deploy');
+    setCurrentQuiz(generateMathQuiz(QUIZ_MODES.DIVISION));
+    setShowQuizModal(true);
+  };
 
   const handleAnswer = (selected, e) => {
     if (selected === currentQuiz.a) {
-      const reward = 50 + Math.floor(Math.random() * 50); // 50~99 gold
-      setGold(g => g + reward);
-      addLog(`[작업 완료] +${reward} 냥 획득!`, 'success');
-      
-      // Floating text effect
-      const id = Date.now();
-      const rect = e.target.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top;
-      
-      setFloatingTexts(prev => [...prev, { id, text: `+${reward}냥!`, x, y }]);
-      setTimeout(() => {
-        setFloatingTexts(prev => prev.filter(t => t.id !== id));
-      }, 1000);
+      playSfx('coin');
+      if (quizPurpose === 'deploy') {
+        const nextCharge = Math.min(DEPLOY_QUIZ_REQUIRED, deployQuizCharge + 1);
+        setDeployQuizCharge(nextCharge);
+        if (nextCharge >= DEPLOY_QUIZ_REQUIRED) {
+          addLog(`⚔️ 출진 게이지 충전 완료! 바로 출진할 수 있습니다.`, 'success');
+          setShowQuizModal(false);
+        } else {
+          addLog(`⚔️ 출진 게이지 ${nextCharge}/${DEPLOY_QUIZ_REQUIRED} 충전.`, 'info');
+        }
+      } else {
+        const reward = 50 + Math.floor(Math.random() * 50); // 50~99 gold
+        setGold(g => g + reward);
+        addLog(`[구구단 작업 완료] +${reward} 냥 획득!`, 'success');
+
+        // Floating text effect
+        const id = Date.now();
+        const rect = e.target.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top;
+
+        setFloatingTexts(prev => [...prev, { id, text: `+${reward}냥!`, x, y }]);
+        setTimeout(() => {
+          setFloatingTexts(prev => prev.filter(t => t.id !== id));
+        }, 1000);
+      }
 
     } else {
-      addLog(`[작업 실수] 엽전을 얻지 못했습니다.`, 'error');
+      playSfx('wrong');
+      addLog(quizPurpose === 'deploy' ? `[풀무질 실수] 출진 게이지가 오르지 않았습니다.` : `[작업 실수] 엽전을 얻지 못했습니다.`, 'error');
     }
     // Next quiz immediately
-    setCurrentQuiz(generateMathQuiz());
+    setCurrentQuiz(generateMathQuiz(quizPurpose === 'deploy' ? QUIZ_MODES.DIVISION : QUIZ_MODES.MULTIPLICATION));
   };
 
   const triggerFlash = (type) => {
@@ -802,7 +1679,8 @@ function App() {
     setTimeout(() => setFlashClass(''), 1000);
   };
 
-  const triggerStrike = () => {
+  const triggerStrike = (text = '깡!', particleCount = 15) => {
+    playSfx('hammer');
     setIsStriking(true);
     setTimeout(() => setIsStriking(false), 150);
 
@@ -810,14 +1688,14 @@ function App() {
     const strikeId = `${Date.now()}-${Math.random()}`;
     const textX = 35 + Math.random() * 30;
     const textY = 25 + Math.random() * 20;
-    setStrikeTexts(prev => [...prev, { id: strikeId, text: '깡!', x: `${textX}%`, top: `${textY}%` }]);
+    setStrikeTexts(prev => [...prev, { id: strikeId, text, x: `${textX}%`, top: `${textY}%` }]);
     setTimeout(() => {
       setStrikeTexts(prev => prev.filter(t => t.id !== strikeId));
     }, 400);
 
     // Spark particles
     const newParticles = [];
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 40 + Math.random() * 80;
       const dx = Math.cos(angle) * speed;
@@ -835,6 +1713,10 @@ function App() {
     setTimeout(() => {
       setParticles(prev => prev.filter(p => !newParticles.includes(p)));
     }, 600);
+  };
+
+  const scheduleStrike = (delay, text, particleCount) => {
+    setTimeout(() => triggerStrike(text, particleCount), Math.max(0, delay));
   };
 
   const triggerSuccessParticles = () => {
@@ -857,6 +1739,46 @@ function App() {
     }, 600);
   };
 
+  const triggerGreatSuccessParticles = (intensity = 1) => {
+    const newParticles = [];
+    const sparkCount = Math.round(42 * intensity);
+    const rayCount = Math.round(12 * intensity);
+
+    for (let i = 0; i < sparkCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 90 + Math.random() * 170;
+      const dx = Math.cos(angle) * speed;
+      const dy = Math.sin(angle) * speed - 40;
+      newParticles.push({
+        id: `${Date.now()}-great-spark-${i}-${Math.random()}`,
+        left: `${43 + Math.random() * 14}%`,
+        top: `${44 + Math.random() * 18}%`,
+        dx: `${dx}px`,
+        dy: `${dy}px`,
+        type: 'bonus-spark'
+      });
+    }
+
+    for (let i = 0; i < rayCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 110 + Math.random() * 120;
+      newParticles.push({
+        id: `${Date.now()}-great-ray-${i}-${Math.random()}`,
+        left: '50%',
+        top: '50%',
+        dx: `${Math.cos(angle) * distance}px`,
+        dy: `${Math.sin(angle) * distance}px`,
+        rotate: `${angle}rad`,
+        type: 'bonus-ray'
+      });
+    }
+
+    setParticles(prev => [...prev, ...newParticles]);
+    setTimeout(() => {
+      setParticles(prev => prev.filter(p => !newParticles.includes(p)));
+    }, 1400);
+  };
+
   const triggerFailParticles = () => {
     const newParticles = [];
     for (let i = 0; i < 20; i++) {
@@ -877,9 +1799,132 @@ function App() {
     }, 1000);
   };
 
+  const applySuccessfulUpgradeStep = (targetTier, targetPath) => {
+    const nextTier = Math.min(MAX_WEAPON_TIER, targetTier);
+    setTier(nextTier);
+    if (nextTier > 1 && targetPath) {
+      setPath(targetPath);
+      setMaxPathToday(targetPath);
+    }
+    setMaxTierToday(mt => Math.max(mt, nextTier));
+    unlockWeapon(nextTier, targetPath);
+  };
+
+  const continueGreatSuccessUpgrade = (currentDisplayTier, finalTargetTier, finalPath, bonusStepIndex = 1, totalBonusSteps = 1) => {
+    const currentName = getWeaponNameByState(currentDisplayTier, finalPath);
+    const nextTier = Math.min(MAX_WEAPON_TIER, currentDisplayTier + 1);
+    const nextName = getWeaponNameByState(nextTier, finalPath);
+    const isThirdUpgradeSurge = totalBonusSteps >= 2 && bonusStepIndex >= 2;
+    const noticeText = isThirdUpgradeSurge
+      ? '어어? 설마...한번 더?'
+      : `...오잉? ${currentName} 안쪽의 결이 드러난다?`;
+    const strikeDelay = getRandomDelay(1150, 450);
+    const holdDelay = strikeDelay + getRandomDelay(950, 650);
+    const bonusRevealDelay = holdDelay + getRandomDelay(1500, 800);
+    const upgradeApplyDelay = bonusRevealDelay + getRandomDelay(2800, 950);
+    setIsEnhancing(true);
+    setEnhancementPhase('surging');
+    setBonusUpgradeNotice(noticeText);
+    setOutcome(null);
+    triggerGreatSuccessParticles(0.65);
+    addLog(isThirdUpgradeSurge ? `어어? 설마...한번 더?` : `...오잉? ${currentName} 안쪽의 결이 드러납니다.`, 'warning');
+
+    scheduleStrike(360, '깡!', isThirdUpgradeSurge ? 18 : 14);
+    scheduleStrike(880, '챙!', isThirdUpgradeSurge ? 20 : 16);
+    scheduleStrike(strikeDelay, '번쩍!', 24);
+    scheduleStrike(Math.min(holdDelay - 260, strikeDelay + 520), '카앙!', isThirdUpgradeSurge ? 24 : 18);
+
+    setTimeout(() => {
+      playSfx('tension');
+      setBonusUpgradeNotice(isThirdUpgradeSurge ? '남은 잠재력을 더 끌어낸다...' : `${currentName} 숨은 힘이 올라온다...`);
+      triggerStrike('...', 12);
+    }, holdDelay);
+
+    scheduleStrike(holdDelay + 620, isThirdUpgradeSurge ? '쾅!' : '깡!', isThirdUpgradeSurge ? 26 : 18);
+    scheduleStrike(bonusRevealDelay - 360, '카앙!', isThirdUpgradeSurge ? 28 : 22);
+
+    setTimeout(() => {
+      playSfx('success');
+      setOutcomeWeaponName(nextName);
+      setOutcome('bonus');
+      triggerGreatSuccessParticles(isThirdUpgradeSurge ? 1.45 : 1.15);
+      triggerFlash('success');
+      addLog(`🌟 대성공! 무기가 한 번 더 벼려집니다!`, 'great-success');
+    }, bonusRevealDelay);
+
+    setTimeout(() => {
+      applySuccessfulUpgradeStep(nextTier, finalPath);
+
+      if (nextTier < finalTargetTier) {
+        setOutcome(null);
+        setBonusUpgradeNotice('');
+        setTimeout(() => {
+          playSfx('tension');
+          setBonusUpgradeNotice(`${nextName} 속의 결을 다시 두드린다...`);
+          triggerStrike('...', 10);
+        }, getRandomDelay(1200, 550));
+        scheduleStrike(getRandomDelay(2050, 500), '챙...', 14);
+        scheduleStrike(getRandomDelay(2650, 520), '카앙!', 20);
+        setTimeout(() => {
+          continueGreatSuccessUpgrade(nextTier, finalTargetTier, finalPath, bonusStepIndex + 1, totalBonusSteps);
+        }, getRandomDelay(3150, 900));
+        return;
+      }
+
+      setIsEnhancing(false);
+      setEnhancementPhase('idle');
+      setBonusUpgradeNotice('');
+      setOutcome(null);
+      addLog(`✨ 최종 강화 +${nextTier} 강 도달!`, 'success');
+    }, upgradeApplyDelay);
+  };
+
+  const continueFalseGreatSuccessTease = (currentDisplayTier, finalPath) => {
+    const currentName = getWeaponNameByState(currentDisplayTier, finalPath);
+    const strikeDelay = getRandomDelay(1050, 450);
+    const holdDelay = strikeDelay + getRandomDelay(1050, 650);
+    const falseRevealDelay = holdDelay + getRandomDelay(1450, 850);
+    const settleDelay = falseRevealDelay + getRandomDelay(1550, 800);
+    setIsEnhancing(true);
+    setEnhancementPhase('surging');
+    setBonusUpgradeNotice(`...오잉? ${currentName} 안쪽의 결이 드러난다?`);
+    setOutcome(null);
+    triggerGreatSuccessParticles(0.55);
+    addLog(`...오잉? ${currentName} 안쪽의 결이 드러납니다.`, 'warning');
+
+    scheduleStrike(420, '깡!', 12);
+    scheduleStrike(940, '챙!', 14);
+    scheduleStrike(strikeDelay, '번쩍!', 18);
+    scheduleStrike(Math.min(holdDelay - 240, strikeDelay + 520), '카앙!', 16);
+
+    setTimeout(() => {
+      playSfx('tension');
+      setBonusUpgradeNotice(`${currentName} 숨은 힘이 올라올 듯하다...`);
+      triggerStrike('...', 10);
+    }, holdDelay);
+
+    scheduleStrike(holdDelay + 620, '깡!', 16);
+    scheduleStrike(falseRevealDelay - 360, '챙...', 14);
+
+    setTimeout(() => {
+      playSfx('page');
+      setOutcomeWeaponName(currentName);
+      setOutcome('false-bonus');
+      triggerGreatSuccessParticles(0.42);
+      addLog(`...하지만 더 변하지는 않았습니다. 대성공인 줄 알았지만 +${currentDisplayTier} 강에서 멈췄습니다.`, 'info');
+    }, falseRevealDelay);
+
+    setTimeout(() => {
+      setIsEnhancing(false);
+      setEnhancementPhase('idle');
+      setBonusUpgradeNotice('');
+      setOutcome(null);
+    }, settleDelay);
+  };
+
   const handleUpgrade = (selectedPath = null) => {
     if (isEnhancing || outcome) return; // Prevent multiple clicks
-    
+
     const currentRateInfo = UPGRADE_RATES[tier];
     if (!currentRateInfo) return;
 
@@ -891,56 +1936,124 @@ function App() {
     // Pay cost and start suspense animation
     setGold(g => g - currentRateInfo.cost);
     setIsEnhancing(true);
-    addLog(`망치질을 시작합니다...`, 'info');
+    setEnhancementPhase('hammering');
+    addLog(`대장장이가 망치를 고쳐 쥐고 벼리기를 시작합니다...`, 'info');
 
-    // Strike at 300ms, 700ms, 1100ms
-    setTimeout(() => triggerStrike(), 300);
-    setTimeout(() => triggerStrike(), 700);
-    setTimeout(() => triggerStrike(), 1100);
+    const strikeSequence = [
+      { delay: 240, text: '깡!', particles: 12 },
+      { delay: 620, text: '챙!', particles: 14 },
+      { delay: 1000, text: '탕!', particles: 15 },
+      { delay: 1380, text: '카앙!', particles: 18 },
+      { delay: 1780, text: '쨍!', particles: 16 },
+      { delay: 2180, text: '쾅!', particles: 20 },
+      { delay: 2580, text: '깡!', particles: 18 },
+      { delay: 2940, text: '쾅!', particles: 24 },
+    ];
 
-    // Decision at 1500ms
+    strikeSequence.forEach(({ delay, text, particles }) => {
+      setTimeout(() => triggerStrike(text, particles), delay);
+    });
+
+    const judgingDelay = getRandomDelay(3050, 520);
+    const finalStrikeDelay = judgingDelay + getRandomDelay(260, 420);
+    const decisionDelay = finalStrikeDelay + getRandomDelay(330, 680);
+
+    setTimeout(() => {
+      setEnhancementPhase('judging');
+      playSfx('tension');
+      addLog(`불꽃이 무기 위에서 크게 흔들립니다. 성공인가... 실패인가...`, 'warning');
+    }, judgingDelay);
+
+    setTimeout(() => triggerStrike(Math.random() < 0.45 ? '쾅!' : '카앙!', 30), finalStrikeDelay);
+
+    // Decision after a longer dramatic forge sequence
     setTimeout(() => {
       setIsEnhancing(false);
-      const targetPath = selectedPath || path;
+      setEnhancementPhase('idle');
+      setBonusUpgradeNotice('');
       const roll = Math.random() * 100;
 
       if (roll <= currentRateInfo.rate) {
         // Success
+        const finalPath = path || selectedPath;
+        const firstTier = Math.min(MAX_WEAPON_TIER, tier + 1);
+        setOutcomeWeaponName(getWeaponNameByState(firstTier, finalPath));
+        playSfx('success');
         setOutcome('success');
         triggerSuccessParticles();
         triggerFlash('success');
-        addLog(`✨ 강화 성공! 무기가 더욱 단단해집니다.`, 'success');
-        
+        addLog(`✨ 성공이다! 무기가 더욱 단단해집니다.`, 'success');
+
         setTimeout(() => {
-          setTier(t => {
-            const nextTier = t + 1;
-            setMaxTierToday(mt => Math.max(mt, nextTier));
-            return nextTier;
-          });
-          const finalPath = path || selectedPath;
-          if (!path && selectedPath) {
-            setPath(selectedPath);
-            setMaxPathToday(selectedPath);
+          const totalSteps = getGreatSuccessStepCount(tier);
+          const finalTargetTier = Math.min(MAX_WEAPON_TIER, tier + totalSteps);
+          const shouldFalseAlarm = totalSteps === 1 && firstTier < MAX_WEAPON_TIER && Math.random() * 100 < GREAT_SUCCESS_FALSE_ALARM_RATE;
+
+          applySuccessfulUpgradeStep(firstTier, finalPath);
+
+          if (finalTargetTier > firstTier) {
+            continueGreatSuccessUpgrade(firstTier, finalTargetTier, finalPath, 1, finalTargetTier - firstTier);
+          } else if (shouldFalseAlarm) {
+            continueFalseGreatSuccessTease(firstTier, finalPath);
+          } else {
+            setOutcome(null);
           }
-          unlockWeapon(tier + 1, finalPath);
-          setOutcome(null);
-        }, 1500);
+        }, getRandomDelay(2850, 950));
       } else {
         // Failure
-        setOutcome('fail');
-        triggerFailParticles();
-        triggerFlash('fail');
-        addLog(`💥 강화 실패... 무기가 심하게 흔들립니다.`, 'error');
-
-        // Backup current tier/path for recovery option
+        const fakeoutFailure = Math.random() < 0.55;
         setPreFailureState({ tier, path });
 
-        setTimeout(() => {
-          setOutcome(null);
-          setShowRecoveryModal(true); // Open blacksmith recovery choice modal
-        }, 1500);
+        if (fakeoutFailure) {
+          const holdDelay = getRandomDelay(950, 650);
+          const crackDelay = holdDelay + getRandomDelay(850, 650);
+          const shatterDelay = crackDelay + getRandomDelay(850, 700);
+          const recoveryDelay = shatterDelay + getRandomDelay(1750, 850);
+          playSfx('near-success');
+          setOutcomeWeaponName(weaponName);
+          setOutcome('fakeout');
+          triggerSuccessParticles();
+          triggerFlash('success');
+          addLog(`✨ 거의 됐다...! 불꽃이 무기 표면에 달라붙습니다.`, 'warning');
+
+          setTimeout(() => {
+            playSfx('tension');
+            triggerStrike('...', 10);
+          }, holdDelay);
+
+          setTimeout(() => {
+            playSfx('crack');
+            triggerStrike('쩌적!', 22);
+          }, crackDelay);
+
+          setTimeout(() => {
+            playSfx('shatter');
+            setOutcomeWeaponName(weaponName);
+            setOutcome('fail');
+            triggerFailParticles();
+            triggerFlash('fail');
+            addLog(`💥 쨍그랑! 될 듯하던 무기가 깨져 버렸습니다.`, 'error');
+          }, shatterDelay);
+
+          setTimeout(() => {
+            setOutcome(null);
+            setShowRecoveryModal(true);
+          }, recoveryDelay);
+        } else {
+          playSfx('shatter');
+          setOutcomeWeaponName(weaponName);
+          setOutcome('fail');
+          triggerFailParticles();
+          triggerFlash('fail');
+          addLog(`💥 실패다! 예고 없이 금이 가며 무기가 깨졌습니다.`, 'error');
+
+          setTimeout(() => {
+            setOutcome(null);
+            setShowRecoveryModal(true);
+          }, getRandomDelay(1550, 700));
+        }
       }
-    }, 1500);
+    }, decisionDelay);
   };
 
   const handleAcceptRecovery = () => {
@@ -950,13 +2063,14 @@ function App() {
       correct: 0,
       answers: []
     });
-    setCurrentQuiz(generateMathQuiz());
+    setCurrentQuiz(generateMathQuiz(QUIZ_MODES.DIVISION));
   };
 
   const handleDeclineRecovery = () => {
-    setTier(1);
-    setPath(null);
-    addLog(`💥 복구를 포기하여 무기가 파괴되었습니다. (낡은 몽둥이 1강)`, 'error');
+    const downgraded = getDowngradedWeaponState(preFailureState?.tier || tier, preFailureState?.path || path, 2);
+    setTier(downgraded.tier);
+    setPath(downgraded.path);
+    addLog(`💥 복구를 포기하여 무기가 +${downgraded.tier} 단계로 손상되었습니다.`, 'error');
     setShowRecoveryModal(false);
     setPreFailureState(null);
   };
@@ -976,24 +2090,28 @@ function App() {
         correct: newCorrect,
         answers: newAnswers
       });
-      setCurrentQuiz(generateMathQuiz());
+      setCurrentQuiz(generateMathQuiz(QUIZ_MODES.DIVISION));
     } else {
       // 5 questions finished! Calculate success rate and roll!
       const finalCorrect = newCorrect;
-      const recoveryRate = 30 + finalCorrect * 10; // 0 correct = 30%, 5 correct = 80%
+      const recoveryRate = RECOVERY_BASE_RATE + finalCorrect * RECOVERY_CORRECT_BONUS;
       const roll = Math.random() * 100;
 
       if (roll <= recoveryRate) {
         // Recovery Success! Restore weapon!
+        playSfx('success');
         setTier(preFailureState.tier);
         setPath(preFailureState.path);
         addLog(`✨ 대장장이의 복구 성공! 무기가 원래 상태(+${preFailureState.tier} 강)로 복원되었습니다!`, 'success');
         triggerFlash('success');
       } else {
-        // Recovery Failed! Reset weapon to 1
-        setTier(1);
-        setPath(null);
-        addLog(`💥 복구 실패... 무기가 산산조각 나며 [낡은 몽둥이]가 되었습니다.`, 'error');
+        // Recovery Failed! Downgrade weapon instead of always resetting to 1
+        playSfx('fail');
+        const dropAmount = Math.max(1, 4 - Math.floor(finalCorrect / 2));
+        const downgraded = getDowngradedWeaponState(preFailureState.tier, preFailureState.path, dropAmount);
+        setTier(downgraded.tier);
+        setPath(downgraded.path);
+        addLog(`💥 복구 실패... 무기가 +${preFailureState.tier}에서 +${downgraded.tier} 단계로 손상되었습니다.`, 'error');
         triggerFlash('fail');
       }
 
@@ -1001,11 +2119,12 @@ function App() {
       setShowRecoveryModal(false);
       setRecoveryQuiz(null);
       setPreFailureState(null);
-      setCurrentQuiz(generateMathQuiz());
+      setCurrentQuiz(generateMathQuiz(QUIZ_MODES.MULTIPLICATION));
     }
   };
 
   const triggerMidnightReport = () => {
+    playSfx('page');
     setShowNewspaperModal(true);
     addLog(`🔔 자정 정산일보가 도착했습니다.`, 'warning');
   };
@@ -1017,18 +2136,153 @@ function App() {
     setMaxTierToday(1);
     setMaxPathToday(null);
     setShowNewspaperModal(false);
-    
+
     // Save new date and reset max values in localStorage
     const todayStr = getTodayStr();
     localStorage.setItem('lastAccessDate', todayStr);
     localStorage.setItem('maxTierToday', '1');
     localStorage.setItem('maxPathToday', 'null');
-    
+
     addLog(`🌅 새로운 조선의 아침이 밝아, 무기가 [낡은 몽둥이]로 되돌아갑니다.`, 'info');
+  };
+
+  // [테스트 전용] 실제 강화 결과 없이 대성공 연출만 체험
+  const handleTestGreatSuccessEffect = () => {
+    if (isEnhancing || outcome) return;
+
+    const currentName = weaponName;
+    playSfx('page');
+    addLog(`[테스트] 일반 강화 성공 뒤 대성공으로 이어지는 전체 흐름을 시작합니다.`, 'warning');
+
+    setIsEnhancing(true);
+    setEnhancementPhase('hammering');
+    setBonusUpgradeNotice('');
+    setOutcome(null);
+
+    [
+      { delay: 240, text: '깡!', particles: 12 },
+      { delay: 620, text: '챙!', particles: 14 },
+      { delay: 1000, text: '탕!', particles: 15 },
+      { delay: 1380, text: '카앙!', particles: 18 },
+      { delay: 1780, text: '쨍!', particles: 16 },
+      { delay: 2180, text: '쾅!', particles: 20 },
+      { delay: 2580, text: '깡!', particles: 18 },
+      { delay: 2940, text: '쾅!', particles: 24 },
+    ].forEach(({ delay, text, particles }) => {
+      scheduleStrike(delay, text, particles);
+    });
+
+    setTimeout(() => {
+      setEnhancementPhase('judging');
+      playSfx('tension');
+      addLog(`[테스트] 불꽃이 무기 위에서 크게 흔들립니다. 성공인가... 실패인가...`, 'warning');
+    }, 3250);
+
+    scheduleStrike(3800, '카앙!', 30);
+
+    setTimeout(() => {
+      setEnhancementPhase('idle');
+      playSfx('success');
+      setOutcomeWeaponName(currentName);
+      setOutcome('success');
+      triggerSuccessParticles();
+      triggerFlash('success');
+      addLog(`✨ [테스트] 성공이다! 강화가 끝난 듯합니다.`, 'success');
+    }, 4350);
+
+    setTimeout(() => {
+      setOutcome(null);
+      setBonusUpgradeNotice('');
+      setEnhancementPhase('surging');
+    }, 7600);
+
+    setTimeout(() => {
+      playSfx('tension');
+      setBonusUpgradeNotice(`${currentName} 속의 결을 다시 두드린다...`);
+      triggerStrike('...', 10);
+    }, 9150);
+
+    setTimeout(() => {
+      setBonusUpgradeNotice(`...오잉? ${currentName} 안쪽의 결이 드러난다?`);
+      triggerGreatSuccessParticles(0.65);
+      addLog(`...오잉? ${currentName} 안쪽의 결이 드러납니다.`, 'warning');
+    }, 10500);
+
+    scheduleStrike(11000, '깡!', 14);
+    scheduleStrike(11600, '챙!', 16);
+    scheduleStrike(12150, '번쩍!', 24);
+
+    setTimeout(() => {
+      playSfx('tension');
+      setBonusUpgradeNotice(`${currentName} 숨은 힘이 올라온다...`);
+      triggerStrike('...', 12);
+    }, 13000);
+
+    scheduleStrike(13600, '쾅!', 22);
+    scheduleStrike(14200, '카앙!', 22);
+
+    setTimeout(() => {
+      playSfx('success');
+      setOutcomeWeaponName(currentName);
+      setOutcome('bonus');
+      triggerGreatSuccessParticles(1.15);
+      triggerFlash('success');
+      addLog(`🌟 [테스트] 대성공! 한 번 더 강화되는 연출입니다.`, 'great-success');
+    }, 15050);
+
+    setTimeout(() => {
+      setOutcome(null);
+      setBonusUpgradeNotice('');
+    }, 18000);
+
+    setTimeout(() => {
+      playSfx('tension');
+      setBonusUpgradeNotice(`${currentName} 속의 결을 다시 두드린다...`);
+      triggerStrike('...', 10);
+    }, 19400);
+
+    scheduleStrike(20300, '챙...', 14);
+    scheduleStrike(21200, '카앙!', 20);
+
+    setTimeout(() => {
+      setBonusUpgradeNotice('어어? 설마...한번 더?');
+      triggerGreatSuccessParticles(0.75);
+      addLog(`어어? 설마...한번 더?`, 'warning');
+    }, 22250);
+
+    scheduleStrike(23200, '깡!', 18);
+    scheduleStrike(24200, '번쩍!', 28);
+
+    setTimeout(() => {
+      playSfx('tension');
+      setBonusUpgradeNotice('남은 잠재력을 더 끌어낸다...');
+      triggerStrike('...', 14);
+    }, 25600);
+
+    scheduleStrike(26500, '쾅!', 28);
+    scheduleStrike(27100, '카앙!', 28);
+
+    setTimeout(() => {
+      playSfx('success');
+      setOutcomeWeaponName(currentName);
+      setOutcome('bonus');
+      triggerGreatSuccessParticles(1.45);
+      triggerFlash('success');
+      addLog(`🌟 [테스트] +3 대성공의 두 번째 추가 연출입니다.`, 'great-success');
+    }, 28000);
+
+    setTimeout(() => {
+      setIsEnhancing(false);
+      setEnhancementPhase('idle');
+      setBonusUpgradeNotice('');
+      setOutcome(null);
+      addLog(`[테스트] 대성공 효과 체험 종료. 실제 강화 단계는 유지됩니다.`, 'info');
+    }, 31300);
   };
 
   // [테스트 전용] 특정 무기를 즉시 세팅
   const handleTestSetWeapon = (testPath, testTier) => {
+    playSfx('page');
     setTier(testTier);
     if (testTier === 1) {
       setPath(null);
@@ -1036,25 +2290,42 @@ function App() {
       setPath(testPath);
     }
     unlockWeapon(testTier, testPath);
-    
+
     // Update max stats for testing convenience
     setMaxTierToday(mt => Math.max(mt, testTier));
     if (testTier > 1) {
       setMaxPathToday(testPath);
     }
-    
+
     addLog(`[테스트] +${testTier} ${testPath === null || testTier === 1 ? '낡은 몽둥이' : (WEAPON_TREE[testPath] && WEAPON_TREE[testPath][testTier] ? WEAPON_TREE[testPath][testTier].name : '?')} 장착!`, 'warning');
     setShowTestPanel(false);
   };
 
   const startDeployment = () => {
-    if (deployStatus === 'fighting' || isEnhancing || outcome) return;
-    
+    if (deployStatus === 'fighting' || deployStatus === 'decision' || isEnhancing || outcome) return;
+
+    if (!canStartDeployment) {
+      playSfx('wrong');
+      openDeployQuiz();
+      addLog(`⏳ 출진 준비 중입니다. ${formatCooldown(deployCooldownRemaining)} 후 출진하거나, 나눗셈 퀴즈 ${deployQuizRemaining}문제를 더 맞히면 바로 출진할 수 있습니다.`, 'warning');
+      return;
+    }
+
+    playSfx('deploy');
+    const startedAt = Date.now();
+    setLastDeploymentAt(startedAt);
+    setDeployQuizCharge(0);
+    setNowTick(startedAt);
+
     setDeployStatus('fighting');
     setDeployStep(0);
     setDeployReward(0);
+    setDeployWeaponBroken(false);
+    setDeployDecision(null);
+    setDeployEncounters({});
+    nextDeployEncounterRef.current = null;
     setDeployLogs({
-      0: [{ id: 'start', msg: `⚔️ +${tier} [${weaponName}]을(를) 장착하고 변방으로 출전합니다.`, type: 'info' }]
+      0: [{ id: 'start', msg: `⚔️ +${tier} [${weaponName}]을(를) 장착하고 조선 팔도 출진에 나섭니다.`, type: 'info' }]
     });
     setNewsReport(null);
     setCurrentDeployPage(1);
@@ -1067,19 +2338,21 @@ function App() {
   const runStage = (index, accReward) => {
     if (index >= STAGES.length) {
       // Cleared Stage 7
+      playSfx('success');
       setDeployStatus('finished');
       setDeployReward(accReward);
       setGold(g => g + accReward);
-      
-      const report = getCombatNews(7, true, weaponName, tier);
+
+      const lastEncounter = getDeployEncounterById(deployEncounters[6] || 'enemy-7');
+      const report = getDeploymentFinalNews(lastEncounter, weaponName, tier, accReward);
       setNewsReport(report);
-      
+
       setDeployLogs(prev => ({
         ...prev,
         6: [
           ...(prev[6] || []),
-          { id: `win-7`, msg: `👑 [최종 승리] 한강의 이무기를 격퇴하고 한양의 평화를 수호했습니다!`, type: 'success' },
-          { id: `finish-7`, msg: `📢 출전 완료! 총 ${accReward} 냥의 전리품이 국고(엽전)로 입금되었습니다.`, type: 'info' }
+          { id: `win-7`, msg: `👑 [출진 완수] 마지막 조우의 ${lastEncounter.name}까지 물리치고 무사히 귀환했습니다!`, type: 'success' },
+          { id: `finish-7`, msg: `📢 출진 완료! 총 ${accReward} 냥의 전리품을 얻었습니다.`, type: 'info' }
         ]
       }));
 
@@ -1088,8 +2361,16 @@ function App() {
       return;
     }
 
-    const stage = STAGES[index];
-    
+    const linkedEncounterId = nextDeployEncounterRef.current;
+    nextDeployEncounterRef.current = null;
+    const encounter = linkedEncounterId
+      ? getDeployEncounterById(linkedEncounterId)
+      : pickDeployEncounter(index);
+    setDeployEncounters(prev => ({
+      ...prev,
+      [index]: encounter.id,
+    }));
+
     // Auto flip to new stage page if not the first stage
     if (index > 0) {
       setDeployStep(index);
@@ -1101,19 +2382,87 @@ function App() {
       ...prev,
       [index]: [
         ...(prev[index] || []),
-        { id: `encounter-${index}`, msg: `[${index + 1}단계] ${stage.name}에 진입합니다... (기본 확률: ${stage.baseChance}%)`, type: 'info' }
+        {
+          id: `encounter-${index}`,
+          msg: encounter.kind === 'enemy'
+            ? `조우 ${index + 1}: ${linkedEncounterId ? '이어진 조우 / ' : ''}${encounter.name} / 성공률 ${getDeployPassChance(encounter.baseChance, tier)}% / 보상 +${encounter.reward}냥`
+            : `조우 ${index + 1}: ${linkedEncounterId ? '이어진 조우 / ' : ''}${encounter.name} / ${encounter.reward >= 0 ? `보상 +${encounter.reward}냥` : `손실 -${Math.abs(encounter.reward)}냥`}`,
+          type: 'info'
+        },
+        ...(encounter.clue ? [{ id: `clue-${index}`, msg: `단서: ${encounter.clue}`, type: 'info' }] : [])
       ]
     }));
 
     setTimeout(() => {
-      // Pass Probability = BaseChance + (tier - 1) * 12% (min 5%, max 95%)
-      let passChance = stage.baseChance + (tier - 1) * 12;
-      passChance = Math.max(5, Math.min(95, passChance));
+      if (encounter.kind !== 'enemy') {
+        playSfx(encounter.kind === 'treasure' ? 'coin' : 'page');
+        const eventReward = encounter.reward;
+        const eventLog = encounter.logs[Math.floor(Math.random() * encounter.logs.length)];
+        const isHazard = eventReward < 0;
+        const lossAmount = Math.abs(eventReward);
+        const lootLoss = isHazard ? Math.min(accReward, lossAmount) : 0;
+        const goldLoss = isHazard ? lossAmount - lootLoss : 0;
+        const newTotalReward = isHazard ? Math.max(0, accReward - lootLoss) : accReward + eventReward;
+        const hasWeaponDamage = Boolean(encounter.weaponDamageChance) && tier > 1 && Math.random() * 100 < encounter.weaponDamageChance;
+        let downgraded = null;
+        let nextLinkedEncounter = null;
+
+        if (encounter.nextEncounterIds?.length && index + 1 < STAGES.length) {
+          const nextId = encounter.nextEncounterIds[Math.floor(Math.random() * encounter.nextEncounterIds.length)];
+          nextLinkedEncounter = getDeployEncounterById(nextId);
+          nextDeployEncounterRef.current = nextLinkedEncounter.id;
+        }
+
+        if (goldLoss > 0) {
+          setGold(g => Math.max(0, g - goldLoss));
+        }
+
+        if (hasWeaponDamage) {
+          downgraded = getDowngradedWeaponState(tier, path, 1);
+          setTier(downgraded.tier);
+          setPath(downgraded.path);
+          setDeployWeaponBroken(true);
+          addLog(`🪓 출진 중 사고로 +${tier} [${weaponName}]이 +${downgraded.tier} 단계로 손상되었습니다.`, 'error');
+        }
+
+        setDeployReward(newTotalReward);
+        setDeployLogs(prev => ({
+          ...prev,
+          [index]: [
+            ...(prev[index] || []),
+            {
+              id: `event-${index}`,
+              msg: isHazard
+                ? `위험: ${eventLog} / 전리품 -${lootLoss}냥${goldLoss > 0 ? ` / 보유 엽전 -${goldLoss}냥` : ''}`
+                : `수확: ${eventLog} / +${eventReward}냥`,
+              type: isHazard ? 'error' : 'success'
+            },
+            ...(hasWeaponDamage ? [{ id: `event-break-${index}`, msg: `무기 손상: +${downgraded.tier} 단계로 하락`, type: 'error' }] : []),
+            ...(nextLinkedEncounter ? [{ id: `linked-${index}`, msg: `예고: ${encounter.nextHint || nextLinkedEncounter.name}`, type: 'info' }] : [])
+          ]
+        }));
+
+        if (index + 1 >= STAGES.length) {
+          setDeployStatus('finished');
+          setGold(g => g + newTotalReward);
+          setNewsReport(getDeploymentFinalNews(encounter, weaponName, tier, newTotalReward));
+          setCurrentDeployPage(8);
+          setMaxReachedPage(8);
+        } else {
+          setDeployStatus('decision');
+          setDeployDecision({ nextIndex: index + 1, reward: newTotalReward, completedIndex: index });
+        }
+        return;
+      }
+
+      // Pass Probability = BaseChance + weapon tier bonus (min 5%, max 90%)
+      const passChance = getDeployPassChance(encounter.baseChance, tier);
 
       const roll = Math.random() * 100;
       const isSuccess = roll <= passChance;
 
       // Shake effect on hit!
+      playSfx('combat-hit');
       setCombatShake(true);
       setTimeout(() => setCombatShake(false), 200);
 
@@ -1148,32 +2497,71 @@ function App() {
       }, 600);
 
       if (isSuccess) {
-        const stageReward = stage.reward;
+        playSfx('success');
+        const stageReward = encounter.reward;
         const newTotalReward = accReward + stageReward;
-        
+        setDeployReward(newTotalReward);
+
         setDeployLogs(prev => ({
           ...prev,
           [index]: [
             ...(prev[index] || []),
-            { id: `success-${index}`, msg: `✨ [돌파 성공] ${COMBAT_STORIES[index + 1] ? COMBAT_STORIES[index + 1].winLogs[Math.floor(Math.random() * COMBAT_STORIES[index + 1].winLogs.length)] : stage.winMsg} (+${stageReward} 냥)`, type: 'success' }
+            { id: `success-${index}`, msg: `성공: ${encounter.winMsg} / +${stageReward}냥`, type: 'success' }
           ]
         }));
 
-        runStage(index + 1, newTotalReward);
+        if (index + 1 >= STAGES.length) {
+          setDeployStatus('finished');
+          setGold(g => g + newTotalReward);
+          setNewsReport(getDeploymentFinalNews(encounter, weaponName, tier, newTotalReward));
+          setDeployLogs(prev => ({
+            ...prev,
+            [index]: [
+              ...(prev[index] || []),
+              { id: `win-final-${index}`, msg: `출진 완수: 마지막 조우까지 성공`, type: 'success' },
+              { id: `finish-final-${index}`, msg: `정산: +${newTotalReward}냥`, type: 'info' }
+            ]
+          }));
+          setCurrentDeployPage(8);
+          setMaxReachedPage(8);
+        } else {
+          setDeployStatus('decision');
+          setDeployDecision({ nextIndex: index + 1, reward: newTotalReward, completedIndex: index });
+        }
       } else {
+        playSfx('fail');
         setDeployStatus('finished');
-        setDeployReward(accReward);
-        setGold(g => g + accReward);
+        const loss = getDeploymentLoss(accReward, encounter.storyLevel);
+        setDeployReward(loss.netReward);
+        setGold(g => Math.max(0, g + loss.netReward));
 
-        const report = getCombatNews(index + 1, false, weaponName, tier);
+        const breakChance = getDeployBreakChance(tier);
+        const isWeaponBroken = breakChance > 0 && Math.random() * 100 < breakChance;
+        setDeployWeaponBroken(isWeaponBroken);
+        let downgraded = null;
+        if (isWeaponBroken) {
+          const dropAmount = 1 + Math.floor(Math.random() * 2);
+          downgraded = getDowngradedWeaponState(tier, path, dropAmount);
+          setTier(downgraded.tier);
+          setPath(downgraded.path);
+          addLog(`💥 출진 퇴각 중 +${tier} [${weaponName}]이 파손되어 +${downgraded.tier} 단계로 약해졌습니다.`, 'error');
+        }
+
+        const report = getCombatNews(encounter.storyLevel, false, weaponName, tier, encounter.name);
         setNewsReport(report);
+        const lossParts = [
+          loss.lootLoss > 0 ? `전리품 -${loss.lootLoss}냥` : null,
+          loss.goldLoss > 0 ? `보유 엽전 -${loss.goldLoss}냥` : null,
+        ].filter(Boolean);
 
         setDeployLogs(prev => ({
           ...prev,
           [index]: [
             ...(prev[index] || []),
-            { id: `fail-${index}`, msg: `💥 [패배] ${COMBAT_STORIES[index + 1] ? COMBAT_STORIES[index + 1].loseLogs[Math.floor(Math.random() * COMBAT_STORIES[index + 1].loseLogs.length)] : stage.loseMsg}`, type: 'error' },
-            { id: `finish-${index}`, msg: `📢 출전 종료! 총 ${accReward} 냥의 전리품이 입금되었습니다.`, type: 'info' }
+            { id: `fail-${index}`, msg: `패배: ${encounter.loseMsg}`, type: 'error' },
+            { id: `loss-${index}`, msg: `손실: ${lossParts.join(' / ')}`, type: 'error' },
+            ...(isWeaponBroken ? [{ id: `break-${index}`, msg: `무기 손상: +${downgraded.tier} 단계로 하락`, type: 'error' }] : []),
+            { id: `finish-${index}`, msg: loss.netReward >= 0 ? `정산: +${loss.netReward}냥` : `정산: -${Math.abs(loss.netReward)}냥`, type: loss.netReward >= 0 ? 'info' : 'error' }
           ]
         }));
 
@@ -1182,6 +2570,41 @@ function App() {
         setMaxReachedPage(index + 2);
       }
     }, 1200);
+  };
+
+  const handleContinueDeployment = () => {
+    if (!deployDecision) return;
+
+    playSfx('deploy');
+    const { nextIndex, reward } = deployDecision;
+    setDeployDecision(null);
+    setDeployStatus('fighting');
+    runStage(nextIndex, reward);
+  };
+
+  const handleReturnFromDeployment = () => {
+    if (!deployDecision) return;
+
+    playSfx('page');
+    const { reward, completedIndex } = deployDecision;
+    setDeployDecision(null);
+    setDeployStatus('finished');
+    setDeployReward(reward);
+    setGold(g => g + reward);
+    setDeployLogs(prev => ({
+      ...prev,
+      [completedIndex]: [
+        ...(prev[completedIndex] || []),
+        { id: `return-${completedIndex}`, msg: `🏠 [자진 귀환] 전리품 ${reward} 냥을 챙겨 대장간으로 돌아갑니다.`, type: 'info' }
+      ]
+    }));
+    setNewsReport({
+      titleDate: "조선 16XX년 O월 O일 (한성 일보 속보)",
+      headline: "무리한 진군 대신 실속 있는 귀환, 전리품 확보",
+      body: `주인공은 +${tier} [${weaponName}]을(를) 들고 ${completedIndex + 1}단계 임무까지 마친 뒤, 다음 임무로 무리하게 진군하지 않고 전리품 ${reward} 냥을 얻어 안전하게 귀환하였다. 대장간에서는 '살아 돌아오는 것도 실력'이라며 다음 출진을 위한 풀무질을 준비하고 있다.`
+    });
+    setCurrentDeployPage(completedIndex + 2);
+    setMaxReachedPage(completedIndex + 2);
   };
 
   return (
@@ -1194,32 +2617,74 @@ function App() {
       ))}
 
       <header className="header glass-panel">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <h1 style={{ margin: 0 }}>Weapon Reinforce</h1>
-          <button className="gallery-btn" onClick={() => setShowGalleryModal(true)}>📖 무기 도감</button>
+        <div className="header-main">
+          <div className="header-title-group">
+            <h1>⚒️ 신비한 대장간</h1>
+          </div>
+          <div className="header-actions">
+            <button
+              className="gallery-btn"
+              onClick={() => {
+                playSfx('page');
+                setShowGalleryModal(true);
+              }}
+            >
+              📖 무기 도감
+            </button>
+            <button
+              className={`sound-toggle-btn ${soundEnabled ? 'enabled' : 'muted'}`}
+              onClick={() => {
+                const nextSoundEnabled = !soundEnabled;
+                setSoundEnabled(nextSoundEnabled);
+                if (nextSoundEnabled) {
+                  playSoundEffect('page', true);
+                }
+              }}
+              title="효과음 켜기/끄기"
+              aria-pressed={soundEnabled}
+            >
+              {soundEnabled ? '🔊 효과음' : '🔇 효과음'}
+            </button>
+            <button
+              className="smith-tool-btn mode-switch-btn"
+              onClick={cycleViewportMode}
+              title="화면 모드 전환"
+            >
+              ↔ 모드전환: {viewportMode}
+            </button>
+            <button
+              className="smith-tool-btn fullscreen-btn"
+              onClick={toggleFullscreen}
+              title={isFullscreen ? '전체화면 종료' : '전체화면'}
+            >
+              ⛶ {isFullscreen ? '전체화면 종료' : '전체화면'}
+            </button>
+          </div>
         </div>
-        <div className="gold-display">🪙 {gold.toLocaleString()} 냥</div>
+        <div className="header-status">
+          <div className="gold-display">🪙 {gold.toLocaleString()} 냥</div>
+        </div>
       </header>
 
       <div className="main-content">
         <section className={`smith-section glass-panel`}>
-          <h2>⚒️ 신비한 대장간</h2>
-          
-          <button 
-            className="btn-primary quiz-toggle-btn" 
-            onClick={() => setShowQuizModal(true)}
-            disabled={isEnhancing || outcome}
-          >
-            🔥 대장간 풀무질 알바 (엽전 벌기)
-          </button>
-          
-          <div className={`weapon-display ${isEnhancing ? 'is-enhancing' : ''} ${isStriking ? 'is-striking' : ''} ${outcome ? outcome : ''}`}>
-            <div className="bg-layer"></div>
+          <div className={`weapon-display ${isEnhancing ? 'is-enhancing' : ''} ${enhancementPhase === 'judging' ? 'judging' : ''} ${enhancementPhase === 'surging' ? 'surging' : ''} ${isStriking ? 'is-striking' : ''} ${outcome ? outcome : ''}`}>
+            <div
+              className="bg-layer"
+              style={{ backgroundImage: `url(${getImageUrl('anvil_bg.png')})` }}
+            ></div>
             <div className="furnace-glow"></div>
             <div className="weapon-glow"></div>
-            
+            {(enhancementPhase === 'surging' || outcome === 'bonus') && (
+              <div className="great-success-aura" aria-hidden="true">
+                <span className="aura-ring aura-ring-one"></span>
+                <span className="aura-ring aura-ring-two"></span>
+                <span className="aura-core"></span>
+              </div>
+            )}
+
             <div className="weapon-tier">+{tier} 강</div>
-            
+
             <div className="worktable-container">
               <div className="weapon-wrapper">
                 <WeaponImage path={path} tier={tier} name={weaponName} />
@@ -1228,23 +2693,24 @@ function App() {
 
             {/* Sparks and Smoke particles */}
             {particles.map(p => (
-              <div 
-                key={p.id} 
-                className={`${p.type}-particle`} 
-                style={{ 
-                  left: p.left, 
-                  top: p.top, 
-                  '--dx': p.dx, 
-                  '--dy': p.dy 
-                }} 
+              <div
+                key={p.id}
+                className={`${p.type}-particle`}
+                style={{
+                  left: p.left,
+                  top: p.top,
+                  '--dx': p.dx,
+                  '--dy': p.dy,
+                  '--rotate': p.rotate || '0rad'
+                }}
               />
             ))}
 
             {/* Strike Text popups */}
             {strikeTexts.map(st => (
-              <div 
-                key={st.id} 
-                className="strike-text" 
+              <div
+                key={st.id}
+                className="strike-text"
                 style={{ left: st.x, top: st.top }}
               >
                 {st.text}
@@ -1252,14 +2718,13 @@ function App() {
             ))}
 
             {/* Success/Fail Banner */}
-            {outcome && (
-              <div className={`result-banner ${outcome}`}>
-                {outcome === 'success' ? '성공!' : '실패...'}
+            {enhancementPhase === 'judging' && !outcome && (
+              <div className="suspense-banner">
+                성공인가...? 실패인가...?
               </div>
             )}
-
-            <div className="weapon-name">
-              {isEnhancing ? "강화 중..." : weaponName}
+            <div className={`weapon-name ${outcome ? `outcome-name ${outcome}` : ''}`}>
+              {outcome ? outcomeWeaponLabel : enhancementPhase === 'judging' ? '판정 중...' : enhancementPhase === 'surging' ? (bonusUpgradeNotice || weaponName) : isEnhancing ? '망치질 중...' : weaponName}
             </div>
           </div>
 
@@ -1270,32 +2735,69 @@ function App() {
                   <span>비용: {UPGRADE_RATES[tier].cost} 냥</span>
                   <span>성공 확률: {UPGRADE_RATES[tier].rate}%</span>
                 </div>
-                
-                {tier === 1 ? (
-                  <div className="path-selection">
-                    <button className="btn-success" onClick={() => handleUpgrade("1H")} disabled={isEnhancing || outcome}>한손검 진화</button>
-                    <button className="btn-success" onClick={() => handleUpgrade("2H")} disabled={isEnhancing || outcome}>두손검 진화</button>
-                  </div>
-                ) : (
-                  <button className="btn-success" onClick={() => handleUpgrade()} disabled={isEnhancing || outcome} style={{padding: '1rem', fontSize: '1.2rem'}}>
-                    무기 벼리기 (강화)
+
+                <div className="smith-action-row">
+                  <button
+                    className="btn-primary quiz-toggle-btn primary-action-btn"
+                    onClick={openGoldQuiz}
+                    disabled={isEnhancing || outcome}
+                  >
+                    <span className="coin-image-icon" aria-hidden="true" />
+                    <span>엽전 벌기</span>
                   </button>
-                )}
+                  {tier === 1 ? (
+                    <div className="path-selection primary-action-btn">
+                      <button className="btn-success" onClick={() => handleUpgrade("1H")} disabled={isEnhancing || outcome}>🔨 한손 강화</button>
+                      <button className="btn-success" onClick={() => handleUpgrade("2H")} disabled={isEnhancing || outcome}>🔨 두손 강화</button>
+                    </div>
+                  ) : (
+                    <button className="btn-success upgrade-main-btn primary-action-btn" onClick={() => handleUpgrade()} disabled={isEnhancing || outcome}>
+                      🔨 무기 강화
+                    </button>
+                  )}
+                  <button
+                    className="btn-deploy primary-action-btn"
+                    onClick={startDeployment}
+                    disabled={isEnhancing || outcome || deployStatus === 'fighting' || deployStatus === 'decision'}
+                  >
+                    {canStartDeployment ? '⚔️ 조선팔도출진' : `🔥 출진 게이지 (${deployQuizCharge}/${DEPLOY_QUIZ_REQUIRED})`}
+                  </button>
+                </div>
               </>
             ) : (
-              <div className="upgrade-info" style={{justifyContent: 'center', color: '#fbbf24', fontSize: '1.2rem', fontWeight: 'bold'}}>
-                👑 최종 단계 무기입니다!
+              <div className="smith-action-row">
+                <button
+                  className="btn-primary quiz-toggle-btn primary-action-btn"
+                  onClick={openGoldQuiz}
+                  disabled={isEnhancing || outcome}
+                >
+                  <span className="coin-image-icon" aria-hidden="true" />
+                  <span>엽전 벌기</span>
+                </button>
+                <div className="max-tier-notice primary-action-btn">
+                  👑 최종 단계 무기입니다!
+                </div>
+                <button
+                  className="btn-deploy primary-action-btn"
+                  onClick={startDeployment}
+                  disabled={isEnhancing || outcome || deployStatus === 'fighting' || deployStatus === 'decision'}
+                >
+                  {canStartDeployment ? '⚔️ 조선팔도출진' : `🔥 출진 게이지 (${deployQuizCharge}/${DEPLOY_QUIZ_REQUIRED})`}
+                </button>
               </div>
             )}
-            
-            <button 
-              className="btn-deploy" 
-              onClick={startDeployment} 
-              disabled={isEnhancing || outcome || deployStatus === 'fighting'}
-              style={{ padding: '1rem', fontSize: '1.2rem', marginTop: '0.5rem', width: '100%' }}
-            >
-              ⚔️ 변방 출전 (전투 시뮬레이션)
-            </button>
+            <div className={`deploy-cooldown-panel ${canStartDeployment ? 'ready' : 'locked'}`} aria-live="polite">
+              <div className="deploy-cooldown-row">
+                <span>{canStartDeployment ? '출진 가능' : `다음 출진까지 ${formatCooldown(deployCooldownRemaining)}`}</span>
+                <strong>나눗셈 {deployQuizCharge}/{DEPLOY_QUIZ_REQUIRED}</strong>
+              </div>
+              <div className="deploy-gauge-track">
+                <span style={{ width: `${(deployQuizCharge / DEPLOY_QUIZ_REQUIRED) * 100}%` }} />
+              </div>
+              {!canStartDeployment && (
+                <p>5분을 기다리거나 풀무질 나눗셈 {deployQuizRemaining}문제를 맞히면 바로 출진할 수 있습니다.</p>
+              )}
+            </div>
           </div>
         </section>
       </div>
@@ -1304,7 +2806,14 @@ function App() {
         <button style={{background: '#374151'}} onClick={triggerMidnightReport}>
           🌙 시간 가속 (자정 초기화 테스트)
         </button>
-        <button 
+        <button
+          style={{background: 'linear-gradient(135deg, #0e7490, #ca8a04)', padding: '0.6rem 1rem', borderRadius: '0.5rem', color: 'white', border: '1px solid rgba(255,255,255,0.18)', cursor: isEnhancing || outcome ? 'not-allowed' : 'pointer', fontSize: '0.9rem', fontWeight: 900}}
+          onClick={handleTestGreatSuccessEffect}
+          disabled={isEnhancing || outcome}
+        >
+          🌟 대성공 효과 체험하기
+        </button>
+        <button
           style={{background: '#7c3aed', padding: '0.5rem 1rem', borderRadius: '0.5rem', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.9rem', width: '100%', marginTop: '0.4rem'}}
           onClick={() => setShowTestPanel(p => !p)}
         >
@@ -1356,14 +2865,14 @@ function App() {
         }}>
           <div className="modal-content glass-panel">
             <button className="close-btn" onClick={() => setShowQuizModal(false)}>✕</button>
-            <h2>💦 불꽃 튀는 작업 현장 (구구단)</h2>
+            <h2>{quizPurpose === 'deploy' ? '🔥 출진 게이지 풀무질 (나눗셈)' : '💦 엽전 벌기 작업장 (구구단)'}</h2>
             <div className="quiz-question">
               {currentQuiz.q}
             </div>
             <div className="quiz-options">
               {currentQuiz.options.map((opt, idx) => (
-                <button 
-                  key={idx} 
+                <button
+                  key={idx}
                   className="quiz-option-btn"
                   onClick={(e) => handleAnswer(opt, e)}
                 >
@@ -1380,28 +2889,28 @@ function App() {
         <div className="modal-overlay">
           <div className="modal-content glass-panel" style={{ maxWidth: '550px' }}>
             <h2>😭 대장장이의 사죄와 복구 제안</h2>
-            
+
             <div className="blacksmith-layout">
               <div className="blacksmith-image-container">
-                <img 
-                  src="/images/blacksmith_apology.png" 
-                  alt="사과하는 대장장이" 
+                <img
+                  src={getImageUrl('blacksmith_apology.png')}
+                  alt="사과하는 대장장이"
                   className="blacksmith-avatar"
                 />
               </div>
               <div className="speech-bubble">
                 {!recoveryQuiz ? (
                   <>
-                    "아이고! 정말 면목이 없소... 내 망치질이 어긋나서 귀중한 무기가 그만 부서졌소이다! 
+                    "아이고! 정말 면목이 없소... 내 망치질이 어긋나서 귀중한 무기가 그만 부서졌소이다!
                     내 온 힘을 다해 <strong>무료로 복구 작업</strong>을 시도해보려 하는데, 풀무질을 조금 도와주시겠소?"
                     <br/><br/>
                     <small style={{ color: '#fca5a5' }}>
-                      (※ 복구 성공률: 5문제 모두 정답 시 80%, 한 문제 틀릴 때마다 10% 차감. 실패 시 복구 불가 및 1강 리셋)
+                      (※ 복구 성공률: 5문제 모두 정답 시 50%, 한 문제 틀릴 때마다 8% 차감. 실패 또는 포기 시 무기는 몇 단계 하락)
                     </small>
                   </>
                 ) : (
                   <>
-                    "풀무질을 세게 밀어넣어 주시오! 수학 문제를 빠르고 정확하게 풀수록 복구 성공률이 올라갑니다!"
+                    "풀무질을 세게 밀어넣어 주시오! 나눗셈 문제를 빠르고 정확하게 풀수록 복구 성공률이 올라갑니다!"
                   </>
                 )}
               </div>
@@ -1421,16 +2930,16 @@ function App() {
                 <div className="progress-header">
                   <span>복구 시도 중 ({recoveryQuiz.step + 1} / 5)</span>
                   <span className="recovery-percentage-badge">
-                    현재 복구 성공률: {30 + recoveryQuiz.correct * 10}%
+                    현재 복구 성공률: {RECOVERY_BASE_RATE + recoveryQuiz.correct * RECOVERY_CORRECT_BONUS}%
                   </span>
                 </div>
                 <div className="recovery-meter-bar">
-                  <div 
-                    className="recovery-meter-fill" 
-                    style={{ width: `${((30 + recoveryQuiz.correct * 10) / 80) * 100}%` }}
+                  <div
+                    className="recovery-meter-fill"
+                    style={{ width: `${((RECOVERY_BASE_RATE + recoveryQuiz.correct * RECOVERY_CORRECT_BONUS) / (RECOVERY_BASE_RATE + 5 * RECOVERY_CORRECT_BONUS)) * 100}%` }}
                   />
                 </div>
-                
+
                 <div className="recovery-quiz-slots">
                   {[0, 1, 2, 3, 4].map(idx => {
                     let slotClass = '';
@@ -1460,8 +2969,8 @@ function App() {
                 </div>
                 <div className="quiz-options">
                   {currentQuiz.options.map((opt, idx) => (
-                    <button 
-                      key={idx} 
+                    <button
+                      key={idx}
                       className="quiz-option-btn"
                       onClick={() => handleRecoveryAnswer(opt)}
                     >
@@ -1483,18 +2992,18 @@ function App() {
           <div className="modal-content glass-panel" style={{ maxWidth: '800px', width: '95%' }}>
             <button className="close-btn" onClick={() => setShowGalleryModal(false)}>✕</button>
             <h2>📖 대장간 무기 도감</h2>
-            
+
             <div className="gallery-layout">
               {/* Left Pane: Tabs and Grid */}
               <div className="gallery-left-pane">
                 <div className="gallery-tabs">
-                  <button 
+                  <button
                     className={`gallery-tab-btn ${activeTab === '1H' ? 'active' : ''}`}
                     onClick={() => setActiveTab('1H')}
                   >
                     🗡️ 한손 무기
                   </button>
-                  <button 
+                  <button
                     className={`gallery-tab-btn ${activeTab === '2H' ? 'active' : ''}`}
                     onClick={() => setActiveTab('2H')}
                   >
@@ -1507,7 +3016,7 @@ function App() {
                   {(() => {
                     const isActive = selectedGalleryItem?.key === 'common_1';
                     return (
-                      <div 
+                      <div
                         className={`gallery-card ${isActive ? 'active' : ''}`}
                         onClick={() => setSelectedGalleryItem({
                           key: 'common_1',
@@ -1539,8 +3048,8 @@ function App() {
                     }
 
                     return (
-                      <div 
-                        key={key} 
+                      <div
+                        key={key}
                         className={`gallery-card ${isActive ? 'active' : ''}`}
                         onClick={() => setSelectedGalleryItem({
                           key,
@@ -1562,11 +3071,11 @@ function App() {
                 {selectedGalleryItem ? (
                   <>
                     <div className="gallery-detail-img-container">
-                      <WeaponImage 
-                        path={selectedGalleryItem.path} 
-                        tier={selectedGalleryItem.tier} 
-                        name={selectedGalleryItem.item.name} 
-                        className="gallery-detail-img" 
+                      <WeaponImage
+                        path={selectedGalleryItem.path}
+                        tier={selectedGalleryItem.tier}
+                        name={selectedGalleryItem.item.name}
+                        className="gallery-detail-img"
                       />
                     </div>
                     <div className="gallery-detail-title">
@@ -1588,67 +3097,97 @@ function App() {
         </div>
       )}
 
-      {/* DEPLOY MODAL (변방 출전첩 - 책장형 인터페이스) */}
+      {/* DEPLOY MODAL (조선 팔도 출진록 - 책장형 인터페이스) */}
       {showDeployModal && (() => {
         const isNewsPage = deployStatus === 'finished' && currentDeployPage === maxReachedPage;
         const pageIdx = currentDeployPage - 1;
         const stage = pageIdx < 7 ? STAGES[pageIdx] : null;
-        
+        const encounter = stage ? getDeployEncounterById(deployEncounters[pageIdx] || pageIdx + 1) : null;
+        const deployScene = encounter?.scene || null;
+        const visibleStagePage = deployStatus === 'finished' && newsReport
+          ? Math.min(deployStep + 1, STAGES.length)
+          : maxReachedPage;
+        const stageLogs = stage ? (deployLogs[pageIdx] || []) : [];
+        const hasStageSuccess = stageLogs.some(log => log.type === 'success' || String(log.id).startsWith('event-'));
+        const hasStageFail = stageLogs.some(log => String(log.id).startsWith('fail-'));
+        const isEnemyEncounter = encounter?.kind === 'enemy';
+        const isBondEncounter = encounter?.kind === 'bond';
+        const isHazardEncounter = encounter?.kind === 'hazard';
+        const isStoryOnlyEncounter = !isEnemyEncounter;
+        const stageChance = isEnemyEncounter ? getDeployPassChance(encounter.baseChance, tier) : 0;
+        const stageBreakChance = getDeployBreakChance(tier);
+        const deployRewardTone = deployReward >= 0 ? 'positive' : 'negative';
+        const stageSceneState = hasStageSuccess || pageIdx < deployStep
+          ? 'cleared'
+          : hasStageFail
+            ? 'failed'
+            : pageIdx === deployStep && deployStatus === 'fighting'
+              ? 'fighting'
+              : 'pending';
+        const isDecisionPage = deployStatus === 'decision' && deployDecision?.completedIndex === pageIdx;
+
         return (
           <div className={`modal-overlay deploy-overlay ${combatShake ? 'shake-combat' : ''}`}>
             <div className="deploy-scroll-container glass-panel page-slide">
-              {deployStatus !== 'fighting' && (
-                <button 
-                  className="close-btn" 
+              {deployStatus === 'finished' && (
+                <button
+                  className="close-btn"
                   onClick={() => setShowDeployModal(false)}
                 >
                   ✕
                 </button>
               )}
-              
-              <h2>⚔️ 조선 변방 토벌 출전첩</h2>
-              
+
+              <h2>⚔️ 조선 팔도 출진록</h2>
+
               {/* 상단 진행률 및 탭 이동 */}
               <div className="deploy-stage-flow">
                 <div className="deploy-weapon-info">
                   <span className="weapon-badge">+{tier} 강 {weaponName}</span>
-                  <span className="reward-accumulated">💰 누적 획득: <strong>{deployReward}</strong> 냥</span>
+                  <span className={`reward-accumulated ${deployRewardTone}`}>정산 <strong>{deployReward >= 0 ? `+${deployReward}` : `-${Math.abs(deployReward)}`}</strong> 냥</span>
                 </div>
-                
+
                 <div className="deploy-stage-progress">
                   <div className="stage-dots">
                     {STAGES.map((s, idx) => {
                       let dotClass = '';
                       const pageNum = idx + 1;
-                      
+
                       if (idx < deployStep) dotClass = 'passed';
                       else if (idx === deployStep && deployStatus === 'fighting') dotClass = 'active-fight';
-                      else if (idx === deployStep && deployStatus === 'finished') dotClass = 'failed';
-                      
+                      else if (idx === deployStep && hasStageFail) dotClass = 'failed';
+                      else if (idx === deployStep && (deployStatus === 'finished' || deployStatus === 'decision')) dotClass = 'passed';
+
                       if (currentDeployPage === pageNum) dotClass += ' viewing';
-                      
-                      const isClickable = pageNum <= maxReachedPage;
-                      
+
+                      const isClickable = pageNum <= visibleStagePage;
+
                       return (
-                        <button 
-                          key={idx} 
+                        <button
+                          key={idx}
                           className={`stage-dot-btn ${dotClass}`}
                           onClick={() => {
-                            if (isClickable) setCurrentDeployPage(pageNum);
+                            if (isClickable) {
+                              playSfx('page');
+                              setCurrentDeployPage(pageNum);
+                            }
                           }}
                           disabled={!isClickable}
-                          title={s.name}
+                          title={`${s.level}번째 조우`}
                         >
                           {s.level}
                         </button>
                       );
                     })}
-                    
+
                     {/* 뉴스 속보 배지 */}
                     {deployStatus === 'finished' && newsReport && (
-                      <button 
+                      <button
                         className={`stage-dot-btn news-badge ${currentDeployPage === maxReachedPage ? 'viewing' : ''}`}
-                        onClick={() => setCurrentDeployPage(maxReachedPage)}
+                        onClick={() => {
+                          playSfx('page');
+                          setCurrentDeployPage(maxReachedPage);
+                        }}
                         title="전투 속보"
                       >
                         📰 속보
@@ -1661,7 +3200,7 @@ function App() {
               {/* 페이지 본문 영역 */}
               {isNewsPage && newsReport ? (
                 /* 뉴스 속보 독점 렌더링 */
-                <div className="newspaper-card traditional-style">
+                <div className={`newspaper-card traditional-style ${deployRewardTone}`}>
                   <div className="newspaper-header-mini">
                     <span>속보 (速報)</span>
                     <span>{newsReport.titleDate}</span>
@@ -1672,11 +3211,17 @@ function App() {
                   <p className="newspaper-body-mini">
                     {newsReport.body}
                   </p>
-                  <div className="settlement-rewards">
-                    <span>🎁 최종 전리품 정산: <strong>+{deployReward}</strong> 냥</span>
+                  <div className={`settlement-rewards ${deployRewardTone}`}>
+                    <span>
+                      {deployReward >= 0 ? '정산:' : '손실:'}
+                      <strong>{deployReward >= 0 ? ` +${deployReward}` : ` -${Math.abs(deployReward)}`}</strong> 냥
+                    </span>
+                    {deployWeaponBroken && (
+                      <span className="weapon-break-summary">무기 단계 하락</span>
+                    )}
                   </div>
-                  <button 
-                    className="btn-primary" 
+                  <button
+                    className="btn-primary"
                     onClick={() => setShowDeployModal(false)}
                     style={{ width: '100%', marginTop: '1.2rem', padding: '0.8rem' }}
                   >
@@ -1685,46 +3230,175 @@ function App() {
                 </div>
               ) : (
                 /* 각 단계별 세부 전투 일지 렌더링 */
-                stage && (
-                  <div className="deploy-page-content">
+                stage && encounter && deployScene && (
+                  <div className={`deploy-page-content result-${stageSceneState}`}>
                     <div className="deploy-stage-header">
-                      <h3>{currentDeployPage}단계: {stage.name}</h3>
+                      <h3>조우 {currentDeployPage}: {encounter.name}</h3>
                       <div className="deploy-stage-meta">
-                        <span>🎯 기본 성공률: {Math.max(5, Math.min(95, stage.baseChance + (tier - 1) * 12))}%</span>
-                        <span>💰 성공 보상: {stage.reward} 냥</span>
+                        <span>{isEnemyEncounter ? '전투' : isBondEncounter ? '인연' : isHazardEncounter ? '위험' : '보상'}</span>
+                        <span>{isEnemyEncounter ? `성공 ${stageChance}%` : isBondEncounter ? '도움 받음' : isHazardEncounter ? '손실 발생' : '전투 없음'}</span>
+                        <span>{encounter.reward >= 0 ? `+${encounter.reward}냥` : `-${Math.abs(encounter.reward)}냥`}</span>
+                        <span>손상 {isEnemyEncounter ? `${stageBreakChance}%` : encounter.weaponDamageChance ? `${encounter.weaponDamageChance}%` : '0%'}</span>
                       </div>
                     </div>
-                    
+
                     <p className="deploy-stage-desc">
-                      <strong>토벌 임무:</strong> {stage.desc}
+                      {encounter.desc}
                     </p>
-                    
+
+                    {(encounter.context || encounter.clue) && (
+                      <div className="deploy-stage-context">
+                        {encounter.context && (
+                          <p>
+                            <strong>맥락</strong>
+                            <span>{encounter.context}</span>
+                          </p>
+                        )}
+                        {encounter.clue && (
+                          <p>
+                            <strong>단서</strong>
+                            <span>{encounter.clue}</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <div className="deploy-stage-status">
                       {pageIdx < deployStep ? (
-                        <span className="status-badge clear">✅ 돌파 성공</span>
+                        <span className="status-badge clear">{isEnemyEncounter ? '✅ 돌파 성공' : isBondEncounter ? '✅ 인연 완료' : '✅ 사건 완료'}</span>
                       ) : pageIdx === deployStep && deployStatus === 'fighting' ? (
-                        <span className="status-badge fighting">⚔️ 격렬한 교전 중</span>
+                        <span className="status-badge fighting">{isEnemyEncounter ? '⚔️ 격렬한 교전 중' : isBondEncounter ? '🤝 만남 중' : '📜 사건 처리 중'}</span>
+                      ) : hasStageSuccess ? (
+                        <span className="status-badge clear">{isEnemyEncounter ? '✅ 돌파 성공' : isBondEncounter ? '✅ 인연 완료' : '✅ 사건 완료'}</span>
                       ) : (
                         <span className="status-badge fail">❌ 패배 및 철수</span>
                       )}
                     </div>
 
                     <div className="deploy-battleground">
+                      <div
+                        className={`battlefield-scene ${stageSceneState} ${isStoryOnlyEncounter ? 'story-focus' : ''}`}
+                        style={{
+                          '--scene-sky': deployScene.sky,
+                          '--scene-ground': deployScene.ground,
+                          '--scene-accent': deployScene.accent,
+                        }}
+                      >
+                        <div className="battlefield-atmosphere" />
+                        <div className="battlefield-terrain-label">{deployScene.terrain}</div>
+                        {isEnemyEncounter ? (
+                          <>
+                            <div className="battlefield-side player-side">
+                              <span className="battle-side-label">아군</span>
+                              <div className="battle-weapon-aura">
+                                <WeaponImage path={path} tier={tier} name={weaponName} className="battle-weapon-img" />
+                              </div>
+                              <strong>+{tier} {weaponName}</strong>
+                            </div>
+                            <div className="clash-zone">
+                              <div className="clash-ring" />
+                              <span>{stageSceneState === 'fighting' ? '격돌' : stageSceneState === 'cleared' ? '돌파' : stageSceneState === 'failed' ? '철수' : '대기'}</span>
+                            </div>
+                            <div className="battlefield-side enemy-side">
+                              <span className="battle-side-label">적군</span>
+                              <div className="battle-enemy-token">
+                                <EnemyImage
+                                  src={deployScene.enemySrc}
+                                  name={deployScene.enemyName}
+                                  fallback={deployScene.enemyIcon}
+                                />
+                              </div>
+                              <strong>{deployScene.enemyName}</strong>
+                            </div>
+                          </>
+                        ) : (
+                          <div className={`event-focus-scene ${isBondEncounter ? 'bond' : isHazardEncounter ? 'hazard' : 'event'}`}>
+                            <span className="event-focus-label">{isBondEncounter ? '인연' : isHazardEncounter ? '위험 사건' : encounter.kind === 'treasure' ? '보물 발견' : '사건'}</span>
+                            <div className="battle-event-token">
+                              <EnemyImage
+                                src={deployScene.enemySrc}
+                                name={deployScene.enemyName}
+                                fallback={deployScene.enemyIcon}
+                                className="battle-event-img"
+                              />
+                            </div>
+                            <strong>{deployScene.enemyName}</strong>
+                            <span className="event-focus-state">
+                              {stageSceneState === 'fighting' ? (isBondEncounter ? '만나는 중' : isHazardEncounter ? '대처 중' : '확인 중') : stageSceneState === 'cleared' ? (isBondEncounter ? '인연 완료' : isHazardEncounter ? '위험 처리' : '사건 해결') : stageSceneState === 'failed' ? '손실 발생' : '대기'}
+                            </span>
+                          </div>
+                        )}
+                        {stageSceneState !== 'pending' && (
+                          <div className={`battlefield-result-mark ${stageSceneState}`}>
+                            {stageSceneState === 'cleared' ? (isEnemyEncounter ? '돌파 성공' : isBondEncounter ? '인연 완료' : '사건 해결') : stageSceneState === 'failed' ? '퇴각' : (isEnemyEncounter ? '교전 중' : isBondEncounter ? '만남 중' : '처리 중')}
+                          </div>
+                        )}
+                        {pageIdx === deployStep && (
+                          <>
+                            {particles.map(p => (
+                              <div
+                                key={`deploy-${p.id}`}
+                                className={`${p.type}-particle`}
+                                style={{
+                                  left: p.left,
+                                  top: p.top,
+                                  '--dx': p.dx,
+                                  '--dy': p.dy
+                                }}
+                              />
+                            ))}
+                            {strikeTexts.map(st => (
+                              <div
+                                key={`deploy-${st.id}`}
+                                className="strike-text"
+                                style={{ left: st.x, top: st.top }}
+                              >
+                                {st.text}
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+
+                      <div className="battlefield-stat-row">
+                        <span>{isEnemyEncounter ? `돌파 확률 ${stageChance}%` : isBondEncounter ? '인연을 만나 도움을 받습니다' : isHazardEncounter ? '위험 사건은 전리품이나 보유 엽전을 깎을 수 있습니다' : '전투 없이 전리품을 얻을 수 있습니다'}</span>
+                        <div className="battlefield-chance-meter" aria-hidden="true">
+                          <span style={{ width: `${isEnemyEncounter ? stageChance : isHazardEncounter ? 100 : 65}%` }} />
+                        </div>
+                      </div>
+
                       <div className="deploy-log-viewer" ref={deployLogViewerRef}>
-                        {(deployLogs[pageIdx] || []).map((log, lIdx) => (
+                        {stageLogs.map((log, lIdx) => (
                           <div key={lIdx} className={`deploy-log-entry ${log.type}`}>
                             &gt; {log.msg}
                           </div>
                         ))}
                         {pageIdx === deployStep && deployStatus === 'fighting' && (
                           <div className="deploy-loading-dots">
-                            <span>⚔️ 격전 진행 중</span>
+                            <span>{isEnemyEncounter ? '전투 중' : isBondEncounter ? '만남 중' : '처리 중'}</span>
                             <span className="dot-bounce">.</span>
                             <span className="dot-bounce">.</span>
                             <span className="dot-bounce">.</span>
                           </div>
                         )}
                       </div>
+
+                      {isDecisionPage && (
+                        <div className="deploy-decision-panel">
+                          <div className="decision-copy">
+                            <strong>다음 선택</strong>
+                            <span>현재 전리품 +{deployDecision.reward}냥</span>
+                          </div>
+                          <div className="decision-actions">
+                            <button className="decision-btn return" onClick={handleReturnFromDeployment}>
+                              🏠 귀환
+                            </button>
+                            <button className="decision-btn continue" onClick={handleContinueDeployment}>
+                              ⚔️ 계속 출진
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
@@ -1732,20 +3406,26 @@ function App() {
 
               {/* 하단 쪽수 넘기기 컨트롤러 */}
               <div className="deploy-page-controls">
-                <button 
-                  onClick={() => setCurrentDeployPage(p => Math.max(1, p - 1))}
+                <button
+                  onClick={() => {
+                    playSfx('page');
+                    setCurrentDeployPage(p => Math.max(1, p - 1));
+                  }}
                   disabled={currentDeployPage === 1}
                   className="page-btn"
                 >
                   ◀ 이전 쪽
                 </button>
-                
+
                 <span className="page-indicator">
                   [ {currentDeployPage} / {maxReachedPage} 쪽 ]
                 </span>
-                
-                <button 
-                  onClick={() => setCurrentDeployPage(p => Math.min(maxReachedPage, p + 1))}
+
+                <button
+                  onClick={() => {
+                    playSfx('page');
+                    setCurrentDeployPage(p => Math.min(maxReachedPage, p + 1));
+                  }}
                   disabled={currentDeployPage === maxReachedPage}
                   className="page-btn"
                 >

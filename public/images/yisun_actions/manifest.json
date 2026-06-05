@@ -1,0 +1,449 @@
+{
+  "sourceIdentity": "knol-jump/assets/characters/leesunsin",
+  "status": "strict-review-pass-v3-combo-chain-strips",
+  "frameSize": {
+    "width": 256,
+    "height": 256
+  },
+  "frameKeys": [
+    "idle",
+    "walk_a",
+    "walk_b",
+    "jump",
+    "fall",
+    "slash_start",
+    "slash_middle",
+    "slash_end",
+    "stab_start",
+    "stab_middle",
+    "stab_end"
+  ],
+  "strictConsistencyNote": "Use only frames whose head, face, hat, torso, and limb proportions match the reference model. The same weapon must stay consistent across frames. Hands must grip handles/shafts, not blades. Slash and thrust effects must stay anchored to the weapon path and must not interfere with adjacent cells. Stab effects are strengthened as a separate overlay layer without redrawing the character or changing weapon geometry. Combo-chain attack frames are stored separately as 12 frames: slash anticipation/contact/follow-through, transition, thrust anticipation/contact/follow-through, transition, slash anticipation/contact/follow-through, loop recovery. The first combo action must start with an overhead slash anticipation pose. Two-handed contact frames must show longer reach than one-handed frames, and effects must originate at or ahead of the visible blade/tip, never from the shaft or behind the blade. V3 combo-chain frames are regenerated in 4-frame strips so anticipation/contact/follow-through continuity and effect placement can be reviewed per attack.",
+  "reviewChecks": {
+    "bodyProportionLocked": true,
+    "sameWeaponAcrossFrames": true,
+    "handsGripHandleNotBlade": true,
+    "slashEffectAnchoredToWeaponPath": true,
+    "thrustEffectStartsAtWeaponTip": true,
+    "noAdjacentFrameEffectInterference": true,
+    "stabEffectEnhancedWithoutCharacterOrWeaponRedraw": true,
+    "comboChainHasThreeLinkedPatterns": true,
+    "comboChainStartsWithOverheadSlash": true,
+    "twoHandedReachLongerThanOneHanded": true,
+    "effectsOriginateAtBladeOrTip": true,
+    "noHandsOnBlade": true,
+    "comboContactFramesNeedEffectPositionRework": false,
+    "comboContactFramesHaveSafePadding": true,
+    "comboGeneratedAsFourFrameStrips": true
+  },
+  "sets": {
+    "oneHanded": {
+      "kind": "one_handed",
+      "rawContactSheet": "images/yisun_actions/raw/one_handed_contact_sheet_raw.png",
+      "transparentContactSheet": "images/yisun_actions/raw/one_handed_contact_sheet_transparent.png",
+      "sheet": "images/yisun_actions/one_handed_action_sheet_11.png",
+      "frames": [
+        {
+          "index": 0,
+          "key": "idle",
+          "file": "images/yisun_actions/one_handed_frames/00_idle.png"
+        },
+        {
+          "index": 1,
+          "key": "walk_a",
+          "file": "images/yisun_actions/one_handed_frames/01_walk_a.png"
+        },
+        {
+          "index": 2,
+          "key": "walk_b",
+          "file": "images/yisun_actions/one_handed_frames/02_walk_b.png"
+        },
+        {
+          "index": 3,
+          "key": "jump",
+          "file": "images/yisun_actions/one_handed_frames/03_jump.png"
+        },
+        {
+          "index": 4,
+          "key": "fall",
+          "file": "images/yisun_actions/one_handed_frames/04_fall.png"
+        },
+        {
+          "index": 5,
+          "key": "slash_start",
+          "file": "images/yisun_actions/one_handed_frames/05_slash_start.png"
+        },
+        {
+          "index": 6,
+          "key": "slash_middle",
+          "file": "images/yisun_actions/one_handed_frames/06_slash_middle.png"
+        },
+        {
+          "index": 7,
+          "key": "slash_end",
+          "file": "images/yisun_actions/one_handed_frames/07_slash_end.png"
+        },
+        {
+          "index": 8,
+          "key": "stab_start",
+          "file": "images/yisun_actions/one_handed_frames/08_stab_start.png"
+        },
+        {
+          "index": 9,
+          "key": "stab_middle",
+          "file": "images/yisun_actions/one_handed_frames/09_stab_middle.png"
+        },
+        {
+          "index": 10,
+          "key": "stab_end",
+          "file": "images/yisun_actions/one_handed_frames/10_stab_end.png"
+        }
+      ],
+      "comboChain": {
+        "kind": "one_handed",
+        "rawContactSheet": "images/yisun_actions/raw/one_handed_combo_chain_raw.png",
+        "transparentContactSheet": "images/yisun_actions/raw/one_handed_combo_chain_transparent.png",
+        "sheet": "images/yisun_actions/one_handed_combo_chain_sheet_12.png",
+        "frames": [
+          {
+            "index": 0,
+            "key": "slash_a_anticipation",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/00_slash_a_anticipation.png"
+          },
+          {
+            "index": 1,
+            "key": "slash_a_contact",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/01_slash_a_contact.png"
+          },
+          {
+            "index": 2,
+            "key": "slash_a_followthrough",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/02_slash_a_followthrough.png"
+          },
+          {
+            "index": 3,
+            "key": "transition_a_to_b",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/03_transition_a_to_b.png"
+          },
+          {
+            "index": 4,
+            "key": "thrust_b_anticipation",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/04_thrust_b_anticipation.png"
+          },
+          {
+            "index": 5,
+            "key": "thrust_b_contact",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/05_thrust_b_contact.png"
+          },
+          {
+            "index": 6,
+            "key": "thrust_b_followthrough",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/06_thrust_b_followthrough.png"
+          },
+          {
+            "index": 7,
+            "key": "transition_b_to_c",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/07_transition_b_to_c.png"
+          },
+          {
+            "index": 8,
+            "key": "slash_c_anticipation",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/08_slash_c_anticipation.png"
+          },
+          {
+            "index": 9,
+            "key": "slash_c_contact",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/09_slash_c_contact.png"
+          },
+          {
+            "index": 10,
+            "key": "slash_c_followthrough",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/10_slash_c_followthrough.png"
+          },
+          {
+            "index": 11,
+            "key": "loop_lift_recovery",
+            "file": "images/yisun_actions/one_handed_combo_chain_frames/11_loop_lift_recovery.png"
+          }
+        ],
+        "rawStrips": [
+          "images/yisun_actions/raw/one_handed_combo_chain_slash_a_strip_raw.png",
+          "images/yisun_actions/raw/one_handed_combo_chain_thrust_b_strip_raw.png",
+          "images/yisun_actions/raw/one_handed_combo_chain_slash_c_strip_raw.png"
+        ]
+      }
+    },
+    "twoHanded": {
+      "kind": "two_handed",
+      "rawContactSheet": "images/yisun_actions/raw/two_handed_contact_sheet_raw.png",
+      "transparentContactSheet": "images/yisun_actions/raw/two_handed_contact_sheet_transparent.png",
+      "sheet": "images/yisun_actions/two_handed_action_sheet_11.png",
+      "frames": [
+        {
+          "index": 0,
+          "key": "idle",
+          "file": "images/yisun_actions/two_handed_frames/00_idle.png"
+        },
+        {
+          "index": 1,
+          "key": "walk_a",
+          "file": "images/yisun_actions/two_handed_frames/01_walk_a.png"
+        },
+        {
+          "index": 2,
+          "key": "walk_b",
+          "file": "images/yisun_actions/two_handed_frames/02_walk_b.png"
+        },
+        {
+          "index": 3,
+          "key": "jump",
+          "file": "images/yisun_actions/two_handed_frames/03_jump.png"
+        },
+        {
+          "index": 4,
+          "key": "fall",
+          "file": "images/yisun_actions/two_handed_frames/04_fall.png"
+        },
+        {
+          "index": 5,
+          "key": "slash_start",
+          "file": "images/yisun_actions/two_handed_frames/05_slash_start.png"
+        },
+        {
+          "index": 6,
+          "key": "slash_middle",
+          "file": "images/yisun_actions/two_handed_frames/06_slash_middle.png"
+        },
+        {
+          "index": 7,
+          "key": "slash_end",
+          "file": "images/yisun_actions/two_handed_frames/07_slash_end.png"
+        },
+        {
+          "index": 8,
+          "key": "stab_start",
+          "file": "images/yisun_actions/two_handed_frames/08_stab_start.png"
+        },
+        {
+          "index": 9,
+          "key": "stab_middle",
+          "file": "images/yisun_actions/two_handed_frames/09_stab_middle.png"
+        },
+        {
+          "index": 10,
+          "key": "stab_end",
+          "file": "images/yisun_actions/two_handed_frames/10_stab_end.png"
+        }
+      ],
+      "comboChain": {
+        "kind": "two_handed",
+        "rawContactSheet": "images/yisun_actions/raw/two_handed_combo_chain_raw.png",
+        "transparentContactSheet": "images/yisun_actions/raw/two_handed_combo_chain_transparent.png",
+        "sheet": "images/yisun_actions/two_handed_combo_chain_sheet_12.png",
+        "frames": [
+          {
+            "index": 0,
+            "key": "slash_a_anticipation",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/00_slash_a_anticipation.png"
+          },
+          {
+            "index": 1,
+            "key": "slash_a_contact",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/01_slash_a_contact.png"
+          },
+          {
+            "index": 2,
+            "key": "slash_a_followthrough",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/02_slash_a_followthrough.png"
+          },
+          {
+            "index": 3,
+            "key": "transition_a_to_b",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/03_transition_a_to_b.png"
+          },
+          {
+            "index": 4,
+            "key": "thrust_b_anticipation",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/04_thrust_b_anticipation.png"
+          },
+          {
+            "index": 5,
+            "key": "thrust_b_contact",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/05_thrust_b_contact.png"
+          },
+          {
+            "index": 6,
+            "key": "thrust_b_followthrough",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/06_thrust_b_followthrough.png"
+          },
+          {
+            "index": 7,
+            "key": "transition_b_to_c",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/07_transition_b_to_c.png"
+          },
+          {
+            "index": 8,
+            "key": "slash_c_anticipation",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/08_slash_c_anticipation.png"
+          },
+          {
+            "index": 9,
+            "key": "slash_c_contact",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/09_slash_c_contact.png"
+          },
+          {
+            "index": 10,
+            "key": "slash_c_followthrough",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/10_slash_c_followthrough.png"
+          },
+          {
+            "index": 11,
+            "key": "loop_lift_recovery",
+            "file": "images/yisun_actions/two_handed_combo_chain_frames/11_loop_lift_recovery.png"
+          }
+        ],
+        "rawStrips": [
+          "images/yisun_actions/raw/two_handed_combo_chain_slash_a_strip_raw.png",
+          "images/yisun_actions/raw/two_handed_combo_chain_thrust_b_strip_raw.png",
+          "images/yisun_actions/raw/two_handed_combo_chain_slash_c_strip_raw.png"
+        ]
+      }
+    }
+  },
+  "comboChainFrameKeys": [
+    "slash_a_anticipation",
+    "slash_a_contact",
+    "slash_a_followthrough",
+    "transition_a_to_b",
+    "thrust_b_anticipation",
+    "thrust_b_contact",
+    "thrust_b_followthrough",
+    "transition_b_to_c",
+    "slash_c_anticipation",
+    "slash_c_contact",
+    "slash_c_followthrough",
+    "loop_lift_recovery"
+  ],
+  "phaser": {
+    "frameWidth": 256,
+    "frameHeight": 256,
+    "pixelArt": true,
+    "origin": {
+      "x": 0.5,
+      "y": 0.78,
+      "note": "Keep a stable visual origin when placing the sprite in Phaser; do not trim individual frames."
+    },
+    "animations": {
+      "oneHandedCombo": {
+        "textureKey": "yisun-one-handed-combo",
+        "sheet": "images/yisun_actions/one_handed_combo_chain_sheet_12.png",
+        "frames": [
+          "slash_a_anticipation",
+          "slash_a_contact",
+          "slash_a_followthrough",
+          "transition_a_to_b",
+          "thrust_b_anticipation",
+          "thrust_b_contact",
+          "thrust_b_followthrough",
+          "transition_b_to_c",
+          "slash_c_anticipation",
+          "slash_c_contact",
+          "slash_c_followthrough",
+          "loop_lift_recovery"
+        ],
+        "durations": [
+          150,
+          55,
+          120,
+          95,
+          130,
+          45,
+          95,
+          105,
+          150,
+          55,
+          120,
+          110
+        ],
+        "phases": [
+          "startup",
+          "active",
+          "recovery",
+          "transition",
+          "startup",
+          "active",
+          "recovery",
+          "transition",
+          "startup",
+          "active",
+          "recovery",
+          "transition"
+        ],
+        "activeFrames": [
+          1,
+          5,
+          9
+        ],
+        "repeat": -1,
+        "yoyo": false
+      },
+      "twoHandedCombo": {
+        "textureKey": "yisun-two-handed-combo",
+        "sheet": "images/yisun_actions/two_handed_combo_chain_sheet_12.png",
+        "frames": [
+          "slash_a_anticipation",
+          "slash_a_contact",
+          "slash_a_followthrough",
+          "transition_a_to_b",
+          "thrust_b_anticipation",
+          "thrust_b_contact",
+          "thrust_b_followthrough",
+          "transition_b_to_c",
+          "slash_c_anticipation",
+          "slash_c_contact",
+          "slash_c_followthrough",
+          "loop_lift_recovery"
+        ],
+        "durations": [
+          170,
+          60,
+          145,
+          110,
+          150,
+          50,
+          125,
+          125,
+          170,
+          60,
+          145,
+          130
+        ],
+        "phases": [
+          "startup",
+          "active",
+          "recovery",
+          "transition",
+          "startup",
+          "active",
+          "recovery",
+          "transition",
+          "startup",
+          "active",
+          "recovery",
+          "transition"
+        ],
+        "activeFrames": [
+          1,
+          5,
+          9
+        ],
+        "repeat": -1,
+        "yoyo": false
+      }
+    },
+    "generationPolicy": {
+      "separateEffectLayerPreferred": true,
+      "note": "Future Phaser-targeted regeneration should prefer actor/weapon frames and separate active-frame effect overlays. Baked effects are acceptable only for candidate previews when the effect origin is still readable."
+    }
+  }
+}
