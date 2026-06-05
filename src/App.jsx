@@ -138,9 +138,121 @@ const DEPLOY_COOLDOWN_MS = 5 * 60 * 1000;
 const DEPLOY_QUIZ_REQUIRED = 5;
 const RECOVERY_BASE_RATE = 10;
 const RECOVERY_CORRECT_BONUS = 8;
+const TEST_ENHANCEMENT_SCENARIOS = [
+  { id: 'success-v1', label: '+1강화v1' },
+  { id: 'success-v2', label: '+1강화v2' },
+  { id: 'fail-v1', label: '강화실패v1' },
+  { id: 'fail-v2', label: '강화실패v2' },
+  { id: 'great-2', label: '+2대강화' },
+  { id: 'great-3', label: '+3대강화' },
+];
+const BLACKSMITH_APOLOGY_MESSAGES = [
+  {
+    title: '😭 손이 미끄러진 대장장이의 사죄',
+    image: 'blacksmith_apology.png',
+    alt: '진심으로 사과하는 대장장이',
+    lines: [
+      '아이고... 망치 손잡이에 숯가루가 묻어 손이 미끄러져버렸소.',
+      '쾅! 하고 빗맞더니 {weapon}에 금이 쫙 번졌소이다. 면목 없소.',
+    ],
+    promise: '내 체면을 걸고 무료로 복구해보겠소. 풀무질 나눗셈을 조금만 도와주시겠소?',
+    quiz: '이번엔 망치를 두 손으로 꼭 붙잡겠소. 풀무 바람이 고르게 들어가도록 나눗셈 답을 맞혀주시오!',
+  },
+  {
+    title: '😓 대장장이가 고개를 숙입니다',
+    image: 'blacksmith_apology.png',
+    alt: '진심으로 사과하는 대장장이',
+    lines: [
+      '마지막 한 방을 멋있게 치려다가 손목이 삐끗했소.',
+      '{weapon}을 더 단단하게 만들려던 게 그만... 와장창 소리가 나버렸소이다.',
+    ],
+    promise: '변명은 접어두고, 지금 바로 내 공임 없이 다시 붙여보겠소.',
+    quiz: '금 간 결을 맞추려면 풀무질 박자가 중요하오. 나눗셈으로 박자를 맞춰주시오!',
+  },
+  {
+    title: '🙄 못 본 척하는 대장장이',
+    image: 'blacksmith_lookaway.png',
+    alt: '모른 척하는 대장장이',
+    lines: [
+      '어허... 방금 그 쨍그랑 소리는 대장간 바깥에서 난 소리 아니었소?',
+      '내 손에 망치가 있긴 하지만, {weapon}이 먼저 크게 숨을 쉰 것도 같소.',
+    ],
+    promise: '그래도 여기까지 온 정이 있으니, 모른 척은 여기서 멈추고 무료로 수습해보겠소.',
+    quiz: '나는 못 본 셈 치겠지만 풀무는 정직하오. 나눗셈 답을 맞혀 불길을 고르게 해주시오!',
+  },
+  {
+    title: '😅 재를 밟은 대장장이의 변명',
+    image: 'blacksmith_lookaway.png',
+    alt: '모른 척하는 대장장이',
+    lines: [
+      '대장간 바닥의 재를 밟고 살짝 미끄러졌소. 정말 살짝이었는데 망치는 크게 빗나갔소.',
+      '그 바람에 {weapon}이 버티지 못하고 금이 가버렸소이다. 흠... 재가 문제였소.',
+    ],
+    promise: '이번 실수는 내 탓이니, 무료 복구로 만회해보겠소.',
+    quiz: '재는 치웠고 망치는 닦았소. 이제 나눗셈만 맞히면 복구 불씨가 살아날 것이오!',
+  },
+  {
+    title: '😏 슬쩍 웃는 대장장이의 사과',
+    image: 'blacksmith_smirk.png',
+    alt: '살짝 웃는 대장장이',
+    lines: [
+      '음... 솔직히 말하면 이번엔 {weapon}도 조금 약했소.',
+      '물론 내 손이 미끄러진 것도 맞소. 아주 조금 말이오.',
+    ],
+    promise: '그래도 장인 체면은 있으니 무료로 복구는 해보겠소. 풀무질만 맞춰주시오.',
+    quiz: '너무 심각하게 보진 마시오. 나눗셈만 맞히면 아마도... 어떻게든 되지 않겠소?',
+  },
+  {
+    title: '😏 태연한 대장장이의 변명',
+    image: 'blacksmith_smirk.png',
+    alt: '살짝 웃는 대장장이',
+    lines: [
+      '쨍그랑 소리가 좀 크긴 했지만, 대장간에서는 이런 일도 있는 법이오.',
+      '그래도 {weapon}이 깨진 건 사실이니, 내 손으로 한번 수습해보겠소.',
+    ],
+    promise: '이번 복구는 공임을 받지 않겠소. 대신 다음부터는 무기도 마음을 단단히 먹어야 하오.',
+    quiz: '풀무 바람만 맞으면 붙을 수도 있소. 나눗셈으로 불길을 고르게 밀어주시오.',
+  },
+  {
+    title: '😭 결을 잘못 본 대장장이의 사과',
+    image: 'blacksmith_apology.png',
+    alt: '진심으로 사과하는 대장장이',
+    lines: [
+      '강철의 결을 본다고 눈을 가늘게 뜨다가, 정작 망치가 옆 결을 때렸소.',
+      '{weapon}이 버티는 듯하더니 곧장 쩌적 하고 갈라졌소이다. 내 불찰이오.',
+    ],
+    promise: '이번엔 결을 똑바로 보고 다시 이어보겠소. 풀무질만 도와주시오.',
+    quiz: '결을 맞추는 동안 풀무가 흔들리면 안 되오. 나눗셈으로 불길을 안정시켜주시오!',
+  },
+  {
+    title: '😑 어딘가 수상한 대장장이',
+    image: 'blacksmith_suspicious.png',
+    alt: '수상하게 태연한 대장장이',
+    lines: [
+      '일부러 그런 거냐고 묻는다면... 대장간에도 말 못 할 장인의 사정이 있는 법이오.',
+      '하지만 {weapon}이 하필 그 순간에 깨진 건 참으로 묘한 우연이구려.',
+    ],
+    promise: '의심은 잠시 접어두시오. 겉보기엔 수상해도 복구는 공짜로 해보겠소.',
+    quiz: '내 눈빛 말고 풀무불을 보시오. 나눗셈만 맞히면 아직 수습할 길은 있소.',
+  },
+  {
+    title: '😶 모른 척하기엔 너무 수상합니다',
+    image: 'blacksmith_suspicious.png',
+    alt: '수상하게 태연한 대장장이',
+    lines: [
+      '흠흠. 방금 내 뒤에 숨긴 건 깨진 조각이 아니라... 장인의 비법 도구요.',
+      '{weapon}이 깨진 일과는 아마도, 아주 아마도, 큰 관련이 없을 것이오.',
+    ],
+    promise: '그래도 백성의 눈은 무서우니 이번 복구는 무료로 해보겠소.',
+    quiz: '수상한 마음은 잠시 내려놓고 나눗셈으로 풀무 바람을 맞춰주시오.',
+  },
+];
 
 const getAssetUrl = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`;
 const getImageUrl = (fileName) => getAssetUrl(`images/${fileName}`);
+const getRandomItem = (items) => items[Math.floor(Math.random() * items.length)];
+const TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+const chromaKeyImageCache = new Map();
 
 const formatCooldown = (ms) => {
   const totalSeconds = Math.ceil(ms / 1000);
@@ -1032,14 +1144,30 @@ const getDeploymentLoss = (accReward, storyLevel) => {
 };
 
 const ChromaKeyImage = ({ src, alt, className = "", style = {}, onError = null }) => {
-  const [processedSrc, setProcessedSrc] = useState('');
+  const [processedSrc, setProcessedSrc] = useState(() => chromaKeyImageCache.get(src) || '');
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    setHasError(false);
-    setProcessedSrc('');
+    let cancelled = false;
 
-    if (!src) return;
+    setHasError(false);
+
+    if (!src) {
+      setProcessedSrc('');
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const cachedSrc = chromaKeyImageCache.get(src);
+    if (cachedSrc) {
+      setProcessedSrc(cachedSrc);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setProcessedSrc('');
 
     const img = new Image();
     img.src = src;
@@ -1112,14 +1240,27 @@ const ChromaKeyImage = ({ src, alt, className = "", style = {}, onError = null }
         }
 
         ctx.putImageData(imgData, 0, 0);
-        setProcessedSrc(canvas.toDataURL());
+        const nextProcessedSrc = canvas.toDataURL('image/png');
+        chromaKeyImageCache.set(src, nextProcessedSrc);
+        if (!cancelled) {
+          setProcessedSrc(nextProcessedSrc);
+        }
       } catch {
-        setProcessedSrc(src);
+        chromaKeyImageCache.set(src, src);
+        if (!cancelled) {
+          setProcessedSrc(src);
+        }
       }
     };
     img.onerror = () => {
-      setHasError(true);
-      if (onError) onError();
+      if (!cancelled) {
+        setHasError(true);
+        if (onError) onError();
+      }
+    };
+
+    return () => {
+      cancelled = true;
     };
   }, [src, onError]);
 
@@ -1129,10 +1270,10 @@ const ChromaKeyImage = ({ src, alt, className = "", style = {}, onError = null }
 
   return (
     <img
-      src={processedSrc || src}
+      src={processedSrc || TRANSPARENT_PIXEL}
       alt={alt}
       className={className}
-      style={{ ...style, opacity: processedSrc ? 1 : 0.5, transition: 'opacity 0.2s' }}
+      style={{ ...style, opacity: processedSrc ? 1 : 0, transition: 'opacity 0.16s ease-out' }}
     />
   );
 };
@@ -1386,12 +1527,14 @@ function App() {
   const [outcome, setOutcome] = useState(null); // 'success', 'fail', 'bonus', 'fakeout', 'false-bonus'
   const [outcomeWeaponName, setOutcomeWeaponName] = useState('');
   const [bonusUpgradeNotice, setBonusUpgradeNotice] = useState('');
+  const [previewWeaponState, setPreviewWeaponState] = useState(null);
   const [flashClass, setFlashClass] = useState('');
 
   // Blacksmith Apology & Recovery states
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [preFailureState, setPreFailureState] = useState(null); // { tier, path }
   const [recoveryQuiz, setRecoveryQuiz] = useState(null); // { step, correct, answers: [] }
+  const [recoveryApology, setRecoveryApology] = useState(BLACKSMITH_APOLOGY_MESSAGES[0]);
 
   const deployLogViewerRef = useRef(null);
   const nextDeployEncounterRef = useRef(null);
@@ -1475,6 +1618,12 @@ function App() {
   const playSfx = useCallback((name) => {
     playSoundEffect(name, soundEnabled);
   }, [soundEnabled]);
+
+  const openRecoveryOffer = () => {
+    setRecoveryApology(getRandomItem(BLACKSMITH_APOLOGY_MESSAGES));
+    setRecoveryQuiz(null);
+    setShowRecoveryModal(true);
+  };
 
   const cycleViewportMode = () => {
     playSfx('page');
@@ -1606,17 +1755,26 @@ function App() {
   };
 
   const weaponName = getWeaponNameByState(tier, path);
-  const displayedOutcomeWeaponName = outcomeWeaponName || weaponName;
+  const displayTier = previewWeaponState?.tier ?? tier;
+  const displayPath = previewWeaponState?.path ?? path;
+  const displayWeaponName = previewWeaponState
+    ? getWeaponNameByState(displayTier, displayPath)
+    : weaponName;
+  const displayedOutcomeWeaponName = outcomeWeaponName || displayWeaponName;
+  const recoveryWeaponName = preFailureState
+    ? getWeaponNameByState(preFailureState.tier, preFailureState.path)
+    : weaponName;
+  const formatRecoveryCopy = (text) => text.replace(/\{weapon\}/g, recoveryWeaponName);
   const outcomeWeaponLabel = outcome === 'success'
-    ? `성공이다! ${displayedOutcomeWeaponName}`
+    ? `강화 성공! ${displayedOutcomeWeaponName}`
     : outcome === 'bonus'
       ? `대성공! ${displayedOutcomeWeaponName}`
       : outcome === 'fakeout'
-        ? `될 듯하다... ${displayedOutcomeWeaponName}`
-        : outcome === 'false-bonus'
-          ? `여기서 멈췄다... ${displayedOutcomeWeaponName}`
+        ? `빛이 붙었다... ${displayedOutcomeWeaponName}`
+      : outcome === 'false-bonus'
+          ? `더는 변하지 않았다... ${displayedOutcomeWeaponName}`
           : outcome === 'fail'
-            ? `실패다! ${displayedOutcomeWeaponName}`
+            ? `강화 실패... ${displayedOutcomeWeaponName}`
             : weaponName;
 
   const deployCooldownRemaining = Math.max(0, DEPLOY_COOLDOWN_MS - (nowTick - lastDeploymentAt));
@@ -1845,16 +2003,15 @@ function App() {
 
     setTimeout(() => {
       playSfx('success');
+      applySuccessfulUpgradeStep(nextTier, finalPath);
       setOutcomeWeaponName(nextName);
       setOutcome('bonus');
       triggerGreatSuccessParticles(isThirdUpgradeSurge ? 1.45 : 1.15);
       triggerFlash('success');
-      addLog(`🌟 대성공! 무기가 한 번 더 벼려집니다!`, 'great-success');
+      addLog(`🌟 대성공! ${nextName}의 숨은 결이 열렸습니다.`, 'great-success');
     }, bonusRevealDelay);
 
     setTimeout(() => {
-      applySuccessfulUpgradeStep(nextTier, finalPath);
-
       if (nextTier < finalTargetTier) {
         setOutcome(null);
         setBonusUpgradeNotice('');
@@ -1911,7 +2068,7 @@ function App() {
       setOutcomeWeaponName(currentName);
       setOutcome('false-bonus');
       triggerGreatSuccessParticles(0.42);
-      addLog(`...하지만 더 변하지는 않았습니다. 대성공인 줄 알았지만 +${currentDisplayTier} 강에서 멈췄습니다.`, 'info');
+      addLog(`빛이 잦아들었습니다. 추가 변화 없이 +${currentDisplayTier} 강에서 멈췄습니다.`, 'info');
     }, falseRevealDelay);
 
     setTimeout(() => {
@@ -1937,6 +2094,7 @@ function App() {
     setGold(g => g - currentRateInfo.cost);
     setIsEnhancing(true);
     setEnhancementPhase('hammering');
+    setPreviewWeaponState(null);
     addLog(`대장장이가 망치를 고쳐 쥐고 벼리기를 시작합니다...`, 'info');
 
     const strikeSequence = [
@@ -1961,7 +2119,7 @@ function App() {
     setTimeout(() => {
       setEnhancementPhase('judging');
       playSfx('tension');
-      addLog(`불꽃이 무기 위에서 크게 흔들립니다. 성공인가... 실패인가...`, 'warning');
+      addLog(`불꽃이 무기 위에서 크게 흔들립니다. 마지막 담금질을 지켜봅니다.`, 'warning');
     }, judgingDelay);
 
     setTimeout(() => triggerStrike(Math.random() < 0.45 ? '쾅!' : '카앙!', 30), finalStrikeDelay);
@@ -1977,19 +2135,18 @@ function App() {
         // Success
         const finalPath = path || selectedPath;
         const firstTier = Math.min(MAX_WEAPON_TIER, tier + 1);
+        applySuccessfulUpgradeStep(firstTier, finalPath);
         setOutcomeWeaponName(getWeaponNameByState(firstTier, finalPath));
         playSfx('success');
         setOutcome('success');
         triggerSuccessParticles();
         triggerFlash('success');
-        addLog(`✨ 성공이다! 무기가 더욱 단단해집니다.`, 'success');
+        addLog(`✨ 강화 성공! 무기의 결이 단단해졌습니다.`, 'success');
 
         setTimeout(() => {
           const totalSteps = getGreatSuccessStepCount(tier);
           const finalTargetTier = Math.min(MAX_WEAPON_TIER, tier + totalSteps);
           const shouldFalseAlarm = totalSteps === 1 && firstTier < MAX_WEAPON_TIER && Math.random() * 100 < GREAT_SUCCESS_FALSE_ALARM_RATE;
-
-          applySuccessfulUpgradeStep(firstTier, finalPath);
 
           if (finalTargetTier > firstTier) {
             continueGreatSuccessUpgrade(firstTier, finalTargetTier, finalPath, 1, finalTargetTier - firstTier);
@@ -2014,7 +2171,7 @@ function App() {
           setOutcome('fakeout');
           triggerSuccessParticles();
           triggerFlash('success');
-          addLog(`✨ 거의 됐다...! 불꽃이 무기 표면에 달라붙습니다.`, 'warning');
+          addLog(`✨ 불꽃이 붙었습니다. 하지만 아직 결이 흔들립니다.`, 'warning');
 
           setTimeout(() => {
             playSfx('tension');
@@ -2032,12 +2189,12 @@ function App() {
             setOutcome('fail');
             triggerFailParticles();
             triggerFlash('fail');
-            addLog(`💥 쨍그랑! 될 듯하던 무기가 깨져 버렸습니다.`, 'error');
+            addLog(`💥 쨍그랑! 빛이 꺼지며 균열이 번졌습니다.`, 'error');
           }, shatterDelay);
 
           setTimeout(() => {
             setOutcome(null);
-            setShowRecoveryModal(true);
+            openRecoveryOffer();
           }, recoveryDelay);
         } else {
           playSfx('shatter');
@@ -2045,11 +2202,11 @@ function App() {
           setOutcome('fail');
           triggerFailParticles();
           triggerFlash('fail');
-          addLog(`💥 실패다! 예고 없이 금이 가며 무기가 깨졌습니다.`, 'error');
+          addLog(`💥 강화 실패... 금이 번지며 무기가 깨졌습니다.`, 'error');
 
           setTimeout(() => {
             setOutcome(null);
-            setShowRecoveryModal(true);
+            openRecoveryOffer();
           }, getRandomDelay(1550, 700));
         }
       }
@@ -2072,6 +2229,7 @@ function App() {
     setPath(downgraded.path);
     addLog(`💥 복구를 포기하여 무기가 +${downgraded.tier} 단계로 손상되었습니다.`, 'error');
     setShowRecoveryModal(false);
+    setRecoveryQuiz(null);
     setPreFailureState(null);
   };
 
@@ -2146,138 +2304,280 @@ function App() {
     addLog(`🌅 새로운 조선의 아침이 밝아, 무기가 [낡은 몽둥이]로 되돌아갑니다.`, 'info');
   };
 
-  // [테스트 전용] 실제 강화 결과 없이 대성공 연출만 체험
-  const handleTestGreatSuccessEffect = () => {
+  // [테스트 전용] 실제 강화값 없이 다양한 강화 연출만 체험
+  const handleTestEnhancementScenario = (scenarioId) => {
     if (isEnhancing || outcome) return;
 
-    const currentName = weaponName;
-    playSfx('page');
-    addLog(`[테스트] 일반 강화 성공 뒤 대성공으로 이어지는 전체 흐름을 시작합니다.`, 'warning');
+    const scenario = TEST_ENHANCEMENT_SCENARIOS.find(item => item.id === scenarioId);
+    if (!scenario) return;
 
+    const isGreatSuccessPreview = scenarioId === 'great-2' || scenarioId === 'great-3';
+    const totalUpgradeSteps = scenarioId === 'great-3' ? 3 : scenarioId === 'great-2' ? 2 : 1;
+    const previewPath = path || '1H';
+    const previewBaseTier = Math.max(1, Math.min(tier, MAX_WEAPON_TIER - totalUpgradeSteps));
+    const previewBasePath = previewBaseTier > 1 ? previewPath : null;
+    const startName = getWeaponNameByState(previewBaseTier, previewPath);
+    const firstTier = Math.min(MAX_WEAPON_TIER, previewBaseTier + 1);
+    const firstName = getWeaponNameByState(firstTier, previewPath);
+    const secondTier = Math.min(MAX_WEAPON_TIER, previewBaseTier + 2);
+    const secondName = getWeaponNameByState(secondTier, previewPath);
+    const thirdTier = Math.min(MAX_WEAPON_TIER, previewBaseTier + 3);
+    const thirdName = getWeaponNameByState(thirdTier, previewPath);
+    const strikeSequence = {
+      'success-v1': [
+        { delay: 240, text: '깡!', particles: 12 },
+        { delay: 620, text: '챙!', particles: 14 },
+        { delay: 1000, text: '탕!', particles: 15 },
+        { delay: 1420, text: '카앙!', particles: 18 },
+        { delay: 1920, text: '쨍!', particles: 16 },
+        { delay: 2480, text: '쾅!', particles: 20 },
+        { delay: 3060, text: '카앙!', particles: 24 },
+      ],
+      'success-v2': [
+        { delay: 300, text: '탕!', particles: 12 },
+        { delay: 760, text: '깡!', particles: 15 },
+        { delay: 1280, text: '챙!', particles: 16 },
+        { delay: 1840, text: '카앙!', particles: 18 },
+        { delay: 2440, text: '쾅!', particles: 22 },
+        { delay: 3180, text: '쨍!', particles: 18 },
+        { delay: 3860, text: '쾅!', particles: 26 },
+      ],
+      'fail-v1': [
+        { delay: 220, text: '깡!', particles: 12 },
+        { delay: 660, text: '챙!', particles: 14 },
+        { delay: 1080, text: '탕!', particles: 15 },
+        { delay: 1600, text: '카앙!', particles: 17 },
+        { delay: 2240, text: '쾅!', particles: 20 },
+        { delay: 2920, text: '쨍!', particles: 18 },
+      ],
+      'fail-v2': [
+        { delay: 260, text: '깡!', particles: 13 },
+        { delay: 720, text: '챙!', particles: 15 },
+        { delay: 1240, text: '탕!', particles: 15 },
+        { delay: 1780, text: '카앙!', particles: 19 },
+        { delay: 2380, text: '쾅!', particles: 21 },
+        { delay: 3080, text: '깡!', particles: 18 },
+        { delay: 3820, text: '카앙!', particles: 24 },
+      ],
+      'great-2': [
+        { delay: 240, text: '깡!', particles: 12 },
+        { delay: 620, text: '챙!', particles: 14 },
+        { delay: 1000, text: '탕!', particles: 15 },
+        { delay: 1380, text: '카앙!', particles: 18 },
+        { delay: 1780, text: '쨍!', particles: 16 },
+        { delay: 2180, text: '쾅!', particles: 20 },
+        { delay: 2580, text: '깡!', particles: 18 },
+        { delay: 2940, text: '쾅!', particles: 24 },
+      ],
+      'great-3': [
+        { delay: 240, text: '깡!', particles: 12 },
+        { delay: 640, text: '챙!', particles: 14 },
+        { delay: 1060, text: '탕!', particles: 15 },
+        { delay: 1480, text: '카앙!', particles: 18 },
+        { delay: 1940, text: '쨍!', particles: 16 },
+        { delay: 2440, text: '쾅!', particles: 20 },
+        { delay: 3000, text: '깡!', particles: 18 },
+        { delay: 3520, text: '쾅!', particles: 24 },
+      ],
+    }[scenarioId];
+
+    const finishPreview = (delay) => {
+      setTimeout(() => {
+        setIsEnhancing(false);
+        setEnhancementPhase('idle');
+        setBonusUpgradeNotice('');
+        setOutcome(null);
+        setOutcomeWeaponName('');
+        setPreviewWeaponState(null);
+        addLog(`[체험] ${scenario.label} 연출 종료. 실제 강화 단계는 유지됩니다.`, 'info');
+      }, delay);
+    };
+
+    const revealSuccess = (delay, targetTier, targetName, outcomeType = 'success') => {
+      setTimeout(() => {
+        setIsEnhancing(false);
+        setEnhancementPhase('idle');
+        setPreviewWeaponState({ tier: targetTier, path: previewPath });
+        setOutcomeWeaponName(targetName);
+        setOutcome(outcomeType);
+        playSfx('success');
+        if (outcomeType === 'bonus') {
+          triggerGreatSuccessParticles(targetTier >= thirdTier ? 1.45 : 1.15);
+        } else {
+          triggerSuccessParticles();
+        }
+        triggerFlash('success');
+        addLog(
+          outcomeType === 'bonus'
+            ? `🌟 [체험] 대성공! ${targetName}의 숨은 결이 열렸습니다.`
+            : `✨ [체험] 강화 성공! ${targetName}의 결이 단단해졌습니다.`,
+          outcomeType === 'bonus' ? 'great-success' : 'success'
+        );
+      }, delay);
+    };
+
+    const startGreatSuccessSurge = (delay) => {
+      setTimeout(() => {
+        setIsEnhancing(true);
+        setEnhancementPhase('surging');
+        setOutcome(null);
+        setOutcomeWeaponName('');
+        setBonusUpgradeNotice(`...오잉? ${firstName} 안쪽의 결이 드러난다?`);
+        playSfx('tension');
+        triggerGreatSuccessParticles(0.62);
+        addLog(`...오잉? ${firstName} 안쪽의 결이 드러납니다.`, 'warning');
+      }, delay);
+
+      scheduleStrike(delay + 860, '깡!', 14);
+      scheduleStrike(delay + 1460, '챙!', 16);
+      scheduleStrike(delay + 2240, '번쩍!', 24);
+      scheduleStrike(delay + 3160, '카앙!', 22);
+
+      setTimeout(() => {
+        playSfx('tension');
+        setBonusUpgradeNotice(`${firstName} 숨은 힘을 더 끌어낸다...`);
+        triggerStrike('...', 12);
+      }, delay + 3880);
+
+      scheduleStrike(delay + 4620, '쾅!', 24);
+      scheduleStrike(delay + 5280, '카앙!', 26);
+    };
+
+    const startThirdStepSurge = (delay) => {
+      setTimeout(() => {
+        setIsEnhancing(true);
+        setEnhancementPhase('surging');
+        setOutcome(null);
+        setOutcomeWeaponName('');
+        setBonusUpgradeNotice(`${secondName} 속의 결이 조용히 다시 울린다...`);
+        playSfx('tension');
+        triggerStrike('...', 10);
+        addLog(`${secondName} 속의 결이 조용히 다시 울립니다.`, 'warning');
+      }, delay);
+
+      scheduleStrike(delay + 1220, '챙...', 14);
+      scheduleStrike(delay + 2180, '카앙!', 20);
+
+      setTimeout(() => {
+        setBonusUpgradeNotice('어어? 설마...한번 더?');
+        triggerGreatSuccessParticles(0.78);
+        addLog(`어어? 설마...한번 더?`, 'warning');
+      }, delay + 3180);
+
+      scheduleStrike(delay + 4300, '깡!', 18);
+      scheduleStrike(delay + 5360, '번쩍!', 28);
+
+      setTimeout(() => {
+        playSfx('tension');
+        setBonusUpgradeNotice('남은 잠재력을 더 끌어낸다...');
+        triggerStrike('...', 14);
+      }, delay + 6500);
+
+      scheduleStrike(delay + 7420, '쾅!', 28);
+      scheduleStrike(delay + 8120, '카앙!', 30);
+    };
+
+    playSfx('page');
+    addLog(`[체험] ${scenario.label} 연출을 시작합니다.`, 'warning');
     setIsEnhancing(true);
     setEnhancementPhase('hammering');
     setBonusUpgradeNotice('');
+    setOutcomeWeaponName('');
     setOutcome(null);
+    setPreviewWeaponState({ tier: previewBaseTier, path: previewBasePath });
 
-    [
-      { delay: 240, text: '깡!', particles: 12 },
-      { delay: 620, text: '챙!', particles: 14 },
-      { delay: 1000, text: '탕!', particles: 15 },
-      { delay: 1380, text: '카앙!', particles: 18 },
-      { delay: 1780, text: '쨍!', particles: 16 },
-      { delay: 2180, text: '쾅!', particles: 20 },
-      { delay: 2580, text: '깡!', particles: 18 },
-      { delay: 2940, text: '쾅!', particles: 24 },
-    ].forEach(({ delay, text, particles }) => {
+    strikeSequence.forEach(({ delay, text, particles }) => {
       scheduleStrike(delay, text, particles);
     });
+
+    const lastStrikeDelay = strikeSequence[strikeSequence.length - 1].delay;
+    const judgingDelay = lastStrikeDelay + (scenarioId.endsWith('v2') || isGreatSuccessPreview ? 780 : 620);
+    const finalStrikeDelay = judgingDelay + (scenarioId.endsWith('v2') || isGreatSuccessPreview ? 820 : 560);
+    const decisionDelay = finalStrikeDelay + (scenarioId.endsWith('v2') || isGreatSuccessPreview ? 1120 : 880);
 
     setTimeout(() => {
       setEnhancementPhase('judging');
       playSfx('tension');
-      addLog(`[테스트] 불꽃이 무기 위에서 크게 흔들립니다. 성공인가... 실패인가...`, 'warning');
-    }, 3250);
+      addLog(`[체험] 불꽃이 무기 위에서 크게 흔들립니다. 마지막 담금질을 지켜봅니다.`, 'warning');
+    }, judgingDelay);
 
-    scheduleStrike(3800, '카앙!', 30);
+    scheduleStrike(finalStrikeDelay, scenarioId.endsWith('v2') || isGreatSuccessPreview ? '쾅!' : '카앙!', 30);
 
-    setTimeout(() => {
-      setEnhancementPhase('idle');
-      playSfx('success');
-      setOutcomeWeaponName(currentName);
-      setOutcome('success');
-      triggerSuccessParticles();
-      triggerFlash('success');
-      addLog(`✨ [테스트] 성공이다! 강화가 끝난 듯합니다.`, 'success');
-    }, 4350);
+    if (scenarioId === 'fail-v1') {
+      setTimeout(() => {
+        setIsEnhancing(false);
+        setEnhancementPhase('idle');
+        setOutcomeWeaponName(startName);
+        setOutcome('fail');
+        playSfx('shatter');
+        triggerFailParticles();
+        triggerFlash('fail');
+        addLog(`💥 [체험] 강화 실패... 금이 번지며 무기가 깨졌습니다.`, 'error');
+      }, decisionDelay);
+      finishPreview(decisionDelay + 2800);
+      return;
+    }
 
-    setTimeout(() => {
-      setOutcome(null);
-      setBonusUpgradeNotice('');
-      setEnhancementPhase('surging');
-    }, 7600);
+    if (scenarioId === 'fail-v2') {
+      const crackDelay = decisionDelay + 1850;
+      const shatterDelay = crackDelay + 1300;
 
-    setTimeout(() => {
-      playSfx('tension');
-      setBonusUpgradeNotice(`${currentName} 속의 결을 다시 두드린다...`);
-      triggerStrike('...', 10);
-    }, 9150);
+      setTimeout(() => {
+        setIsEnhancing(false);
+        setEnhancementPhase('idle');
+        setOutcomeWeaponName(startName);
+        setOutcome('fakeout');
+        playSfx('near-success');
+        triggerSuccessParticles();
+        triggerFlash('success');
+        addLog(`✨ [체험] 불꽃이 붙었습니다. 하지만 아직 결이 흔들립니다.`, 'warning');
+      }, decisionDelay);
 
-    setTimeout(() => {
-      setBonusUpgradeNotice(`...오잉? ${currentName} 안쪽의 결이 드러난다?`);
-      triggerGreatSuccessParticles(0.65);
-      addLog(`...오잉? ${currentName} 안쪽의 결이 드러납니다.`, 'warning');
-    }, 10500);
+      setTimeout(() => {
+        playSfx('tension');
+        triggerStrike('...', 10);
+      }, decisionDelay + 980);
 
-    scheduleStrike(11000, '깡!', 14);
-    scheduleStrike(11600, '챙!', 16);
-    scheduleStrike(12150, '번쩍!', 24);
+      setTimeout(() => {
+        playSfx('crack');
+        triggerStrike('쩌적!', 22);
+      }, crackDelay);
 
-    setTimeout(() => {
-      playSfx('tension');
-      setBonusUpgradeNotice(`${currentName} 숨은 힘이 올라온다...`);
-      triggerStrike('...', 12);
-    }, 13000);
+      setTimeout(() => {
+        setOutcomeWeaponName(startName);
+        setOutcome('fail');
+        playSfx('shatter');
+        triggerFailParticles();
+        triggerFlash('fail');
+        addLog(`💥 [체험] 쨍그랑! 빛이 꺼지며 균열이 번졌습니다.`, 'error');
+      }, shatterDelay);
 
-    scheduleStrike(13600, '쾅!', 22);
-    scheduleStrike(14200, '카앙!', 22);
+      finishPreview(shatterDelay + 3000);
+      return;
+    }
 
-    setTimeout(() => {
-      playSfx('success');
-      setOutcomeWeaponName(currentName);
-      setOutcome('bonus');
-      triggerGreatSuccessParticles(1.15);
-      triggerFlash('success');
-      addLog(`🌟 [테스트] 대성공! 한 번 더 강화되는 연출입니다.`, 'great-success');
-    }, 15050);
+    revealSuccess(decisionDelay, firstTier, firstName);
 
-    setTimeout(() => {
-      setOutcome(null);
-      setBonusUpgradeNotice('');
-    }, 18000);
+    if (scenarioId === 'success-v1' || scenarioId === 'success-v2') {
+      finishPreview(decisionDelay + (scenarioId === 'success-v2' ? 4200 : 3400));
+      return;
+    }
 
-    setTimeout(() => {
-      playSfx('tension');
-      setBonusUpgradeNotice(`${currentName} 속의 결을 다시 두드린다...`);
-      triggerStrike('...', 10);
-    }, 19400);
+    const firstSurgeDelay = decisionDelay + (scenarioId === 'great-3' ? 4700 : 4100);
+    const firstBonusRevealDelay = firstSurgeDelay + 6400;
+    startGreatSuccessSurge(firstSurgeDelay);
+    revealSuccess(firstBonusRevealDelay, secondTier, secondName, 'bonus');
 
-    scheduleStrike(20300, '챙...', 14);
-    scheduleStrike(21200, '카앙!', 20);
+    if (scenarioId === 'great-2') {
+      finishPreview(firstBonusRevealDelay + 4200);
+      return;
+    }
 
-    setTimeout(() => {
-      setBonusUpgradeNotice('어어? 설마...한번 더?');
-      triggerGreatSuccessParticles(0.75);
-      addLog(`어어? 설마...한번 더?`, 'warning');
-    }, 22250);
-
-    scheduleStrike(23200, '깡!', 18);
-    scheduleStrike(24200, '번쩍!', 28);
-
-    setTimeout(() => {
-      playSfx('tension');
-      setBonusUpgradeNotice('남은 잠재력을 더 끌어낸다...');
-      triggerStrike('...', 14);
-    }, 25600);
-
-    scheduleStrike(26500, '쾅!', 28);
-    scheduleStrike(27100, '카앙!', 28);
-
-    setTimeout(() => {
-      playSfx('success');
-      setOutcomeWeaponName(currentName);
-      setOutcome('bonus');
-      triggerGreatSuccessParticles(1.45);
-      triggerFlash('success');
-      addLog(`🌟 [테스트] +3 대성공의 두 번째 추가 연출입니다.`, 'great-success');
-    }, 28000);
-
-    setTimeout(() => {
-      setIsEnhancing(false);
-      setEnhancementPhase('idle');
-      setBonusUpgradeNotice('');
-      setOutcome(null);
-      addLog(`[테스트] 대성공 효과 체험 종료. 실제 강화 단계는 유지됩니다.`, 'info');
-    }, 31300);
+    const thirdSurgeDelay = firstBonusRevealDelay + 4700;
+    const thirdBonusRevealDelay = thirdSurgeDelay + 9000;
+    startThirdStepSurge(thirdSurgeDelay);
+    revealSuccess(thirdBonusRevealDelay, thirdTier, thirdName, 'bonus');
+    finishPreview(thirdBonusRevealDelay + 4500);
   };
 
   // [테스트 전용] 특정 무기를 즉시 세팅
@@ -2683,11 +2983,11 @@ function App() {
               </div>
             )}
 
-            <div className="weapon-tier">+{tier} 강</div>
+            <div className="weapon-tier">+{displayTier} 강</div>
 
             <div className="worktable-container">
               <div className="weapon-wrapper">
-                <WeaponImage path={path} tier={tier} name={weaponName} />
+                <WeaponImage path={displayPath} tier={displayTier} name={displayWeaponName} />
               </div>
             </div>
 
@@ -2717,15 +3017,10 @@ function App() {
               </div>
             ))}
 
-            {/* Success/Fail Banner */}
-            {enhancementPhase === 'judging' && !outcome && (
-              <div className="suspense-banner">
-                성공인가...? 실패인가...?
-              </div>
-            )}
-            <div className={`weapon-name ${outcome ? `outcome-name ${outcome}` : ''}`}>
-              {outcome ? outcomeWeaponLabel : enhancementPhase === 'judging' ? '판정 중...' : enhancementPhase === 'surging' ? (bonusUpgradeNotice || weaponName) : isEnhancing ? '망치질 중...' : weaponName}
-            </div>
+          </div>
+
+          <div className={`weapon-name ${outcome ? `outcome-name ${outcome}` : ''}`}>
+            {outcome ? outcomeWeaponLabel : enhancementPhase === 'judging' ? '마지막 담금질...' : enhancementPhase === 'surging' ? (bonusUpgradeNotice || displayWeaponName) : isEnhancing ? '망치질 중...' : displayWeaponName}
           </div>
 
           <div className="upgrade-controls">
@@ -2806,13 +3101,21 @@ function App() {
         <button style={{background: '#374151'}} onClick={triggerMidnightReport}>
           🌙 시간 가속 (자정 초기화 테스트)
         </button>
-        <button
-          style={{background: 'linear-gradient(135deg, #0e7490, #ca8a04)', padding: '0.6rem 1rem', borderRadius: '0.5rem', color: 'white', border: '1px solid rgba(255,255,255,0.18)', cursor: isEnhancing || outcome ? 'not-allowed' : 'pointer', fontSize: '0.9rem', fontWeight: 900}}
-          onClick={handleTestGreatSuccessEffect}
-          disabled={isEnhancing || outcome}
-        >
-          🌟 대성공 효과 체험하기
-        </button>
+        <div className="dev-preview-panel">
+          <div className="dev-preview-title">강화 연출 체험</div>
+          <div className="dev-preview-grid">
+            {TEST_ENHANCEMENT_SCENARIOS.map(scenario => (
+              <button
+                key={scenario.id}
+                className="dev-preview-btn"
+                onClick={() => handleTestEnhancementScenario(scenario.id)}
+                disabled={isEnhancing || outcome}
+              >
+                {scenario.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <button
           style={{background: '#7c3aed', padding: '0.5rem 1rem', borderRadius: '0.5rem', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.9rem', width: '100%', marginTop: '0.4rem'}}
           onClick={() => setShowTestPanel(p => !p)}
@@ -2887,31 +3190,37 @@ function App() {
       {/* BLACKSMITH RECOVERY MODAL */}
       {showRecoveryModal && (
         <div className="modal-overlay">
-          <div className="modal-content glass-panel" style={{ maxWidth: '550px' }}>
-            <h2>😭 대장장이의 사죄와 복구 제안</h2>
+          <div className="modal-content glass-panel recovery-modal" style={{ maxWidth: '640px' }}>
+            <h2>{recoveryApology.title}</h2>
 
             <div className="blacksmith-layout">
               <div className="blacksmith-image-container">
                 <img
-                  src={getImageUrl('blacksmith_apology.png')}
-                  alt="사과하는 대장장이"
+                  src={getImageUrl(recoveryApology.image)}
+                  alt={recoveryApology.alt}
                   className="blacksmith-avatar"
                 />
               </div>
               <div className="speech-bubble">
                 {!recoveryQuiz ? (
-                  <>
-                    "아이고! 정말 면목이 없소... 내 망치질이 어긋나서 귀중한 무기가 그만 부서졌소이다!
-                    내 온 힘을 다해 <strong>무료로 복구 작업</strong>을 시도해보려 하는데, 풀무질을 조금 도와주시겠소?"
-                    <br/><br/>
-                    <small style={{ color: '#fca5a5' }}>
+                  <div className="apology-copy">
+                    {recoveryApology.lines.map((line, index) => (
+                      <p key={index}>{formatRecoveryCopy(line)}</p>
+                    ))}
+                    <p className="apology-promise">
+                      <strong>{formatRecoveryCopy(recoveryApology.promise)}</strong>
+                    </p>
+                    <small className="recovery-note">
                       (※ 복구 성공률: 5문제 모두 정답 시 50%, 한 문제 틀릴 때마다 8% 차감. 실패 또는 포기 시 무기는 몇 단계 하락)
                     </small>
-                  </>
+                  </div>
                 ) : (
-                  <>
-                    "풀무질을 세게 밀어넣어 주시오! 나눗셈 문제를 빠르고 정확하게 풀수록 복구 성공률이 올라갑니다!"
-                  </>
+                  <div className="apology-copy">
+                    <p>{formatRecoveryCopy(recoveryApology.quiz)}</p>
+                    <small className="recovery-note">
+                      나눗셈 문제를 맞힐수록 복구 성공률이 올라갑니다.
+                    </small>
+                  </div>
                 )}
               </div>
             </div>
