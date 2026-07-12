@@ -1,12 +1,27 @@
 {
   "name": "weapon-reinforce",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.1.0",
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "type": "module",
   "scripts": {
+    "predev": "node scripts/prepare-runtime-public.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/prepare-runtime-public.mjs",
     "build": "vite build",
     "lint": "eslint .",
+    "validate:weapons": "node scripts/validate-weapon-timeline.mjs",
+    "validate:quizzes": "node scripts/validate-quiz-catalog.mjs",
+    "validate:saves": "node scripts/validate-save-state.mjs",
+    "validate:save-file": "node scripts/validate-game-save.mjs",
+    "validate:expedition": "node scripts/validate-expedition.mjs",
+    "validate:economy": "node scripts/validate-expedition-economy.mjs",
+    "validate:balance": "node scripts/simulate-game-balance.mjs",
+    "validate:runtime": "node scripts/validate-runtime-assets.mjs",
+    "validate:all": "npm run validate:weapons && npm run validate:quizzes && npm run validate:saves && npm run validate:save-file && npm run validate:economy && npm run validate:expedition && npm run validate:balance && npm run lint && npm run build && npm run validate:runtime",
     "preview": "vite preview"
   },
   "dependencies": {

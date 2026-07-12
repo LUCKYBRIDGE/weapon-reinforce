@@ -1,0 +1,427 @@
+import { WEAPON_TIMELINE } from './weaponTimeline.js';
+
+export const EXPEDITION_REGIONS = Object.freeze([
+  {
+    id: 'cracked-time-road',
+    name: '금이 간 시간길',
+    depthMin: 1,
+    depthMax: 2,
+    tone: 'road',
+    description: '현대의 쇳소리와 조선 후기의 무예 기록이 처음 겹치는 길이다.',
+  },
+  {
+    id: 'martial-manual-garrison',
+    name: '무예서가 잠든 군영',
+    depthMin: 3,
+    depthMax: 4,
+    tone: 'garrison',
+    description: '전란 뒤 정리된 훈련법과 군영의 휴대 무기가 메아리친다.',
+  },
+  {
+    id: 'bronze-mist-site',
+    name: '청동 안개의 옛터',
+    depthMin: 5,
+    depthMax: 7,
+    tone: 'bronze',
+    description: '백제의 철제 의례용 칼에서 한반도 청동기 문화까지 이어지는 오래된 층이다.',
+  },
+]);
+
+const HISTORY_LAYER_COPY = {
+  1: {
+    title: '현대의 제식층',
+    shortFact: 'K2 소총은 우리나라가 개발해 1984년 군의 제식 소총으로 채택했어요.',
+    thinkQuestion: '여러 군인이 같은 규격의 무기를 쓰면 어떤 점이 편리할까요?',
+  },
+  2: {
+    title: '정조의 무예층',
+    shortFact: '1790년에 완성된 《무예도보통지》에는 월도를 쓰는 자세와 방법이 그림과 글로 실려 있어요.',
+    thinkQuestion: '무예 동작을 그림과 글로 함께 남긴 까닭은 무엇일까요?',
+  },
+  3: {
+    title: '전쟁 뒤 훈련층',
+    shortFact: '1598년 《무예제보》는 긴 칼을 두 손으로 다루는 쌍수도 훈련을 그림과 글로 정리했어요.',
+    thinkQuestion: '전쟁 뒤에 훈련 방법을 책으로 정리한 까닭은 무엇일까요?',
+  },
+  4: {
+    title: '조선 군영층',
+    shortFact: '환도는 조선 전기 군인이 전투와 호신에 썼으며, 지니기 편한 비교적 짧은 규격도 중요했어요.',
+    thinkQuestion: '언제나 지니는 무기는 왜 길이와 무게도 중요할까요?',
+  },
+  5: {
+    title: '백제 교류층',
+    shortFact: '칠지도는 일곱 갈래 모양이며, 새겨진 글자의 뜻과 전달 관계에는 여러 견해가 있어요.',
+    thinkQuestion: '역사 자료의 뜻에 여러 견해가 있을 때 어떻게 말해야 정확할까요?',
+  },
+  6: {
+    title: '한국식 동검층',
+    shortFact: '한국식 동검은 비파형동검보다 날이 좁고 곧아 세형동검 또는 좁은놋단검이라고도 해요.',
+    thinkQuestion: '유물의 모양 차이는 시대를 구분하는 데 어떤 도움을 줄까요?',
+  },
+  7: {
+    title: '가장 오래된 청동층',
+    shortFact: '비파형동검은 검몸 아래가 비파처럼 둥글고, 칼몸과 손잡이를 따로 만들어 끼운 것이 특징이에요.',
+    thinkQuestion: '칼몸과 손잡이를 따로 만들면 어떤 점이 달라질까요?',
+  },
+};
+
+export const EXPEDITION_HISTORY_LAYERS = Object.freeze(
+  Object.keys(WEAPON_TIMELINE).map(Number).sort((a, b) => a - b).map(tier => {
+    const weapon = WEAPON_TIMELINE[tier];
+    return Object.freeze({
+      depth: tier,
+      tier,
+      id: `history-${weapon.id}`,
+      weaponId: weapon.id,
+      weaponName: weapon.name,
+      era: weapon.era,
+      yearLabel: weapon.yearLabel,
+      title: HISTORY_LAYER_COPY[tier].title,
+      shortFact: HISTORY_LAYER_COPY[tier].shortFact,
+      fullFact: weapon.fact,
+      thinkQuestion: HISTORY_LAYER_COPY[tier].thinkQuestion,
+      certainty: weapon.certainty,
+      sourceTitle: weapon.sourceTitle,
+      sourceUrl: weapon.sourceUrl,
+      image: weapon.image,
+      fragmentCost: 1,
+    });
+  }),
+);
+
+const enemy = entry => Object.freeze({
+  type: 'enemy',
+  fictional: true,
+  assetMode: 'portal',
+  ...entry,
+});
+
+const support = entry => Object.freeze({
+  fictional: true,
+  assetMode: 'portal',
+  ...entry,
+});
+
+export const EXPEDITION_ENEMIES = Object.freeze([
+  enemy({
+    id: 'time-rift-road-bandit',
+    name: '시간 틈의 노상강도',
+    place: '금이 간 옛길',
+    regionId: 'cracked-time-road',
+    depthMin: 1,
+    depthMax: 2,
+    weight: 30,
+    asset: 'expedition_enemy_bandit.png',
+    assetMode: 'transparent',
+    roleLabel: '빠른 견제형',
+    traitDescription: '체력은 낮지만 첫 반격이 거세다.',
+    combat: {
+      armor: 0,
+      hpPercent: 90,
+      attackPercent: 100,
+      firstAttackPercent: 130,
+      actionName: '몽둥이 휘두르기',
+      telegraph: '몽둥이를 어깨 위로 들어 올린다.',
+      powerName: '기습 내려치기',
+      powerTelegraph: '몸을 낮춘 채 빈틈을 노린다.',
+    },
+    lootTableId: 'road-enemy',
+    intro: '낡은 몽둥이를 든 강도가 시간의 안개 사이에서 길을 막아선다.',
+    result: '강도는 무기의 공명에 놀라 안개 속으로 달아났다.',
+  }),
+  enemy({
+    id: 'startled-mist-boar',
+    name: '놀란 안개 멧돼지',
+    place: '정자로 이어지는 숲길',
+    regionId: 'cracked-time-road',
+    depthMin: 2,
+    depthMax: 2,
+    weight: 30,
+    asset: 'enemy_stage_2.png',
+    roleLabel: '돌진형',
+    traitDescription: '두 번째 반격마다 강한 돌진을 한다.',
+    combat: {
+      armor: 0,
+      hpPercent: 110,
+      attackPercent: 95,
+      powerEvery: 2,
+      powerPercent: 145,
+      actionName: '엄니 휘두르기',
+      telegraph: '고개를 낮추고 엄니를 겨눈다.',
+      powerName: '안개 돌진',
+      powerTelegraph: '앞발로 땅을 긁으며 돌진을 준비한다.',
+    },
+    lootTableId: 'road-enemy',
+    intro: '시간 안개에 놀란 멧돼지가 앞을 보지 못하고 달려온다.',
+    result: '멧돼지는 정신을 차리고 숲속으로 달아났다.',
+  }),
+  enemy({
+    id: 'garrison-tiger-echo',
+    name: '군영 숲의 호랑이 잔영',
+    place: '낡은 군영 뒤편',
+    regionId: 'martial-manual-garrison',
+    depthMin: 3,
+    depthMax: 4,
+    weight: 30,
+    asset: 'enemy_stage_3.png',
+    roleLabel: '잔영 강습형',
+    traitDescription: '세 번째 반격마다 잔영의 힘을 모은다.',
+    combat: {
+      armor: 1,
+      hpPercent: 105,
+      attackPercent: 105,
+      powerEvery: 3,
+      powerPercent: 155,
+      actionName: '잔영 할퀴기',
+      telegraph: '앞발 끝에 흐린 빛이 모인다.',
+      powerName: '호랑이 잔영 강습',
+      powerTelegraph: '몸이 두 겹의 잔영으로 흔들린다.',
+    },
+    lootTableId: 'garrison-enemy',
+    intro: '실제 호랑이가 아닌 시간 오류의 잔영이 낮게 몸을 웅크린다.',
+    result: '호랑이 잔영이 빛 조각으로 흩어져 군영의 길이 다시 열린다.',
+  }),
+  enemy({
+    id: 'fan-carrying-time-thief',
+    name: '부채 든 시간 도적',
+    place: '무너진 교련청',
+    regionId: 'martial-manual-garrison',
+    depthMin: 3,
+    depthMax: 4,
+    weight: 30,
+    asset: 'enemy_stage_4.png',
+    roleLabel: '기습형',
+    traitDescription: '첫 반격이 빠르고 강하지만 방어는 약하다.',
+    combat: {
+      armor: 0,
+      hpPercent: 88,
+      attackPercent: 115,
+      firstAttackPercent: 140,
+      actionName: '부채 견제',
+      telegraph: '부채를 반쯤 접고 손목을 튼다.',
+      powerName: '기록 훔치기',
+      powerTelegraph: '부채 뒤에 몸을 감추고 단숨에 파고든다.',
+    },
+    lootTableId: 'garrison-enemy',
+    intro: '시간 기록 한 장을 훔친 도적이 부채 뒤에 종이를 감추고 달아나려 한다.',
+    result: '도적이 기록을 내려놓고 빈 군영 담장 너머로 도망쳤다.',
+  }),
+  enemy({
+    id: 'bronze-mist-raider',
+    name: '청동 안개의 약탈자',
+    place: '겹쳐진 발굴층',
+    regionId: 'bronze-mist-site',
+    depthMin: 5,
+    depthMax: 6,
+    weight: 60,
+    asset: 'enemy_stage_5.png',
+    roleLabel: '중장갑형',
+    traitDescription: '피해를 줄여 받으며 세 번째 반격이 더 강하다.',
+    combat: {
+      armor: 4,
+      hpPercent: 125,
+      attackPercent: 90,
+      powerEvery: 3,
+      powerPercent: 140,
+      actionName: '청동 자루 후려치기',
+      telegraph: '무거운 자루를 양손으로 움켜쥔다.',
+      powerName: '발굴층 무너뜨리기',
+      powerTelegraph: '발밑의 흙이 울릴 만큼 무기를 높이 든다.',
+    },
+    lootTableId: 'bronze-enemy',
+    intro: '유물처럼 보이는 물건을 함부로 주워 담던 약탈자가 길을 막는다.',
+    result: '약탈자는 주머니를 버리고 안개 밖으로 달아났다.',
+  }),
+  enemy({
+    id: 'primeval-time-shadow',
+    name: '태고의 푸른 시간 그림자',
+    place: '가장 오래된 시간층',
+    regionId: 'bronze-mist-site',
+    depthMin: 7,
+    depthMax: 7,
+    weight: 100,
+    asset: 'enemy_stage_7.png',
+    roleLabel: '시간층 수호형',
+    traitDescription: '높은 방어와 격턴 공명 공격을 지닌 최종 잔영이다.',
+    combat: {
+      armor: 3,
+      hpPercent: 135,
+      attackPercent: 110,
+      powerEvery: 2,
+      powerPercent: 150,
+      actionName: '푸른 파동',
+      telegraph: '푸른 안개가 한 점으로 모인다.',
+      powerName: '태고의 시간 공명',
+      powerTelegraph: '시간층 전체가 푸른빛으로 맥동한다.',
+    },
+    lootTableId: 'final-enemy',
+    intro: '실제 생물이 아닌 푸른 시간 그림자가 마지막 층을 둥글게 감싸고 있다.',
+    result: '그림자가 걷히자 가장 오래된 청동기 시간층이 모습을 드러냈다.',
+    final: true,
+  }),
+]);
+
+export const EXPEDITION_NPCS = Object.freeze([
+  support({
+    id: 'roadside-village-teacher',
+    type: 'npc',
+    name: '길 위의 훈장',
+    place: '바람 쉬는 정자',
+    regionId: 'cracked-time-road',
+    depthMin: 2,
+    depthMax: 2,
+    weight: 23,
+    asset: 'expedition_npc_teacher.png',
+    assetMode: 'transparent',
+    roleLabel: '기록 길잡이',
+    traitDescription: '작은 회복과 함께 다음 전리품 발견을 돕는다.',
+    effects: [
+      { kind: 'heal', amount: 14 },
+      { kind: 'lootBonus', amount: 1 },
+    ],
+    lootTableId: 'road-support',
+    intro: '길을 기록하던 훈장이 물 한 모금과 붕대를 내어 준다.',
+    result: '훈장은 그림과 글을 함께 남기면 다음 사람도 동작을 배울 수 있다고 말했다.',
+    effect: { heal: 20, renown: 4, historyFragments: 1 },
+  }),
+  support({
+    id: 'traveling-field-doctor',
+    type: 'npc',
+    name: '떠돌이 의원',
+    place: '낡은 활터의 그늘',
+    regionId: 'martial-manual-garrison',
+    depthMin: 3,
+    depthMax: 4,
+    weight: 23,
+    asset: 'bond_traveling_doctor.png',
+    roleLabel: '치유 전문가',
+    traitDescription: '큰 회복과 다음 한 번의 방어 도움을 준다.',
+    effects: [
+      { kind: 'heal', amount: 28 },
+      { kind: 'nextGuardBonus', amount: 4 },
+    ],
+    lootTableId: 'garrison-support',
+    intro: '떠돌이 의원이 상처를 살핀 뒤 깨끗한 천으로 단단히 감아 준다.',
+    result: '의원은 도구도 쓰임과 관리법을 알아야 오래 쓸 수 있다고 말했다.',
+    effect: { heal: 26, renown: 5, historyFragments: 1 },
+  }),
+  support({
+    id: 'relic-field-recorder',
+    type: 'npc',
+    name: '유물 기록원',
+    place: '겹쳐진 발굴층',
+    regionId: 'bronze-mist-site',
+    depthMin: 5,
+    depthMax: 6,
+    weight: 23,
+    asset: 'bond_neighborhood_resident.png',
+    roleLabel: '유물 조사 전문가',
+    traitDescription: '다음 공격과 전리품 조사를 돕는다.',
+    effects: [
+      { kind: 'heal', amount: 8 },
+      { kind: 'nextAttackBonus', amount: 20 },
+      { kind: 'lootBonus', amount: 1 },
+    ],
+    lootTableId: 'bronze-support',
+    intro: '기록원이 유물을 옮기기 전에 위치와 흙층을 꼼꼼히 적고 있다.',
+    result: '기록원은 확인한 사실과 아직 모르는 부분을 나누어 써야 한다고 알려 주었다.',
+    effect: { heal: 16, renown: 8, historyFragments: 2 },
+  }),
+]);
+
+export const EXPEDITION_EVENTS = Object.freeze([
+  support({
+    id: 'forgotten-maintenance-kit',
+    type: 'event',
+    name: '잊힌 손질 도구함',
+    place: '길가의 작은 초소',
+    regionId: 'cracked-time-road',
+    depthMin: 2,
+    depthMax: 2,
+    weight: 17,
+    asset: 'event_abandoned_supplies.png',
+    roleLabel: '장비 손질',
+    traitDescription: '체력을 회복하고 다음 반격의 피해를 줄인다.',
+    effects: [
+      { kind: 'heal', amount: 14 },
+      { kind: 'nextGuardBonus', amount: 3 },
+    ],
+    lootTableId: 'road-support',
+    intro: '기름천과 작은 숫돌이 든 도구함을 발견했다.',
+    result: '무기와 장비를 손질하며 잠시 숨을 돌렸다.',
+    effect: { heal: 14, renown: 2, historyFragments: 0 },
+  }),
+  support({
+    id: 'wind-opened-martial-record',
+    type: 'event',
+    name: '바람에 펼쳐진 무예 기록',
+    place: '무너진 교련청',
+    regionId: 'martial-manual-garrison',
+    depthMin: 3,
+    depthMax: 4,
+    weight: 17,
+    asset: 'event_old_chest.png',
+    roleLabel: '무예 동작 연구',
+    traitDescription: '다음 공격의 위력을 높이고 기록 전리품을 더 찾는다.',
+    effects: [
+      { kind: 'heal', amount: 8 },
+      { kind: 'nextAttackBonus', amount: 25 },
+      { kind: 'lootBonus', amount: 1 },
+    ],
+    lootTableId: 'garrison-support',
+    intro: '낡은 상자 안에서 무예 동작을 그린 기록 한 장이 바람에 펼쳐진다.',
+    result: '그림과 설명을 함께 살펴보며 군영의 훈련 기록을 챙겼다.',
+    effect: { heal: 8, renown: 5, historyFragments: 1 },
+  }),
+  support({
+    id: 'marked-excavation-layer',
+    type: 'event',
+    name: '흙층에 남은 유물 표식',
+    place: '청동 안개의 옛터',
+    regionId: 'bronze-mist-site',
+    depthMin: 5,
+    depthMax: 6,
+    weight: 17,
+    asset: 'event_forge_shrine.png',
+    roleLabel: '발굴층 조사',
+    traitDescription: '회복은 적지만 전리품을 두 번 더 조사한다.',
+    effects: [
+      { kind: 'heal', amount: 4 },
+      { kind: 'lootBonus', amount: 2 },
+    ],
+    lootTableId: 'bronze-support',
+    intro: '서로 다른 색의 흙층 사이에 유물 위치를 알리는 작은 표식이 보인다.',
+    result: '유물을 함부로 옮기지 않고 어느 층에서 발견되었는지 먼저 기록했다.',
+    effect: { heal: 6, renown: 6, historyFragments: 2 },
+  }),
+]);
+
+export const EXPEDITION_ENCOUNTERS = Object.freeze([
+  ...EXPEDITION_ENEMIES,
+  ...EXPEDITION_NPCS,
+  ...EXPEDITION_EVENTS,
+]);
+
+export const EXPEDITION_RENOWN_RANKS = Object.freeze([
+  { id: 'newcomer', minRenown: 0, name: '첫발 탐험가', description: '시간 균열에 첫발을 내디뎠다.' },
+  { id: 'pathfinder', minRenown: 50, name: '균열 길잡이', description: '안전하게 돌아오는 길을 익혔다.' },
+  { id: 'recorder', minRenown: 150, name: '시대 기록자', description: '여러 역사층의 기록을 모았다.' },
+  { id: 'guardian', minRenown: 350, name: '시간 수호자', description: '가장 오래된 시간층을 지킬 준비를 마쳤다.' },
+]);
+
+export const getExpeditionRegion = depth => EXPEDITION_REGIONS.find(
+  region => depth >= region.depthMin && depth <= region.depthMax,
+) || EXPEDITION_REGIONS[0];
+
+export const getExpeditionHistoryLayer = depth => EXPEDITION_HISTORY_LAYERS.find(layer => layer.depth === depth)
+  || EXPEDITION_HISTORY_LAYERS[0];
+
+export const getExpeditionEncounterById = id => EXPEDITION_ENCOUNTERS.find(encounter => encounter.id === id) || null;
+
+export const getExpeditionHistoryCardById = id => EXPEDITION_HISTORY_LAYERS.find(layer => layer.id === id) || null;
+
+export const getExpeditionRenownRank = renown => {
+  const safeRenown = Number.isFinite(Number(renown)) ? Math.max(0, Number(renown)) : 0;
+  return [...EXPEDITION_RENOWN_RANKS].reverse().find(rank => safeRenown >= rank.minRenown)
+    || EXPEDITION_RENOWN_RANKS[0];
+};

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540" role="img" aria-label="표를 보고 의자 수와 책상 수의 말 식을 고르는 문제">
+  <style>
+    .bg{fill:#f8fcff}.panel{fill:#fff;stroke:#c7d9e6;stroke-width:4}.body{font-weight:900;font-size:35px;font-family:sans-serif;fill:#26384b}.table{fill:#fff;stroke:#8aa4bb;stroke-width:4}.head{fill:#edf6ff}.cell{stroke:#8aa4bb;stroke-width:4}.label{font-weight:800;font-size:27px;font-family:sans-serif;fill:#26384b}.num{font-weight:900;font-size:36px;font-family:sans-serif;fill:#132b42}.dots{font-weight:900;font-size:36px;font-family:sans-serif;fill:#627789}.blank{fill:#fff7de;stroke:#f0a800;stroke-width:5}.question{font-weight:900;font-size:42px;font-family:sans-serif;fill:#d23a1f}.hintBox{fill:#f4fbf1;stroke:#8abf92;stroke-width:4}.hint{font-weight:800;font-size:26px;font-family:sans-serif;fill:#315329}
+  </style>
+  <rect class="bg" width="900" height="540"/>
+  <rect class="panel" x="28" y="24" width="844" height="492" rx="22"/>
+  <text class="body" x="58" y="92">표를 보고 알맞은 식을 고르세요.</text>
+  <g transform="translate(62 168)">
+    <rect class="table" x="0" y="0" width="776" height="226" rx="16"/>
+    <rect class="head" x="0" y="0" width="156" height="226" rx="16"/>
+    <line class="cell" x1="156" y1="0" x2="156" y2="226"/>
+    <line class="cell" x1="280" y1="0" x2="280" y2="226"/>
+    <line class="cell" x1="404" y1="0" x2="404" y2="226"/>
+    <line class="cell" x1="528" y1="0" x2="528" y2="226"/>
+    <line class="cell" x1="652" y1="0" x2="652" y2="226"/>
+    <line class="cell" x1="0" y1="113" x2="776" y2="113"/>
+    <text class="label" x="28" y="68">책상 수 □</text>
+    <text class="label" x="28" y="181">의자 수 ○</text>
+    <text class="num" x="218" y="70" text-anchor="middle">1</text>
+    <text class="num" x="342" y="70" text-anchor="middle">2</text>
+    <text class="num" x="466" y="70" text-anchor="middle">3</text>
+    <text class="num" x="590" y="70" text-anchor="middle">4</text>
+    <text class="dots" x="714" y="70" text-anchor="middle">...</text>
+    <text class="num" x="218" y="183" text-anchor="middle">2</text>
+    <text class="num" x="342" y="183" text-anchor="middle">4</text>
+    <text class="num" x="466" y="183" text-anchor="middle">6</text>
+    <text class="num" x="590" y="183" text-anchor="middle">8</text>
+    <text class="dots" x="714" y="183" text-anchor="middle">...</text>
+  </g>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540" role="img" aria-label="1단계부터 3단계까지 책상과 의자 대응식">
+  <style>
+    .bg{fill:#fffdf8}.panel{fill:#fff;stroke:#d3cab8;stroke-width:4}.title{font:800 34px sans-serif;fill:#241f18}.body{font:900 38px sans-serif;fill:#3c3328}.label{font:800 21px sans-serif;fill:#5d503f}.desk{fill:#fff;stroke:#ff2b16;stroke-width:6}.chair{fill:#fff;stroke:#0a46ff;stroke-width:6}
+  </style>
+  <rect class="bg" width="900" height="540"/>
+  <rect class="panel" x="28" y="24" width="844" height="492" rx="22"/>
+    <text class="body" x="58" y="92">이 대응관계를 식으로 나타낸 것을 고르세요.</text>
+  <g transform="translate(92 178)">
+    <text class="label" x="-30" y="-44">1단계: 1 × 2 + 2 = 4</text>
+    <circle class="chair" cx="24" cy="-8" r="11"/>
+    <rect class="desk" x="0" y="18" width="48" height="76"/>
+    <circle class="chair" cx="76" cy="34" r="11"/>
+    <circle class="chair" cx="76" cy="78" r="11"/>
+    <circle class="chair" cx="24" cy="122" r="11"/>
+  </g>
+  <g transform="translate(580 178)">
+    <text class="label" x="-30" y="-44">2단계: 2 × 2 + 2 = 6</text>
+    <circle class="chair" cx="24" cy="-8" r="11"/>
+    <circle class="chair" cx="72" cy="-8" r="11"/>
+    <rect class="desk" x="0" y="18" width="48" height="76"/>
+    <rect class="desk" x="48" y="18" width="48" height="76"/>
+    <circle class="chair" cx="124" cy="34" r="11"/>
+    <circle class="chair" cx="124" cy="78" r="11"/>
+    <circle class="chair" cx="24" cy="122" r="11"/>
+    <circle class="chair" cx="72" cy="122" r="11"/>
+  </g>
+  <g transform="translate(340 370)">
+    <text class="label" x="-30" y="-44">3단계: 3 × 2 + 2 = 8</text>
+    <circle class="chair" cx="24" cy="-8" r="11"/>
+    <circle class="chair" cx="72" cy="-8" r="11"/>
+    <circle class="chair" cx="120" cy="-8" r="11"/>
+    <rect class="desk" x="0" y="18" width="48" height="76"/>
+    <rect class="desk" x="48" y="18" width="48" height="76"/>
+    <rect class="desk" x="96" y="18" width="48" height="76"/>
+    <circle class="chair" cx="172" cy="34" r="11"/>
+    <circle class="chair" cx="172" cy="78" r="11"/>
+    <circle class="chair" cx="24" cy="122" r="11"/>
+    <circle class="chair" cx="72" cy="122" r="11"/>
+    <circle class="chair" cx="120" cy="122" r="11"/>
+  </g>
+</svg>

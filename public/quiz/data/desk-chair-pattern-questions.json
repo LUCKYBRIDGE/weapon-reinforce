@@ -1,0 +1,468 @@
+{
+  "version": 1,
+  "title": "규칙과 대응: 책상과 의자",
+  "generatedAt": "2026-06-08T00:00:00+09:00",
+  "count": 22,
+  "questions": [
+    {
+      "id": "desk-chair-pattern-01",
+      "type": "desk-chair-pattern",
+      "prompt": "책상 □이 5개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-01.svg?v=20260609-table-right-ellipsis",
+      "answer": "10개",
+      "choices": [
+        "8개",
+        "9개",
+        "10개",
+        "12개"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "multiply"
+      ]
+    },
+    {
+      "id": "desk-chair-pattern-02",
+      "type": "desk-chair-pattern",
+      "prompt": "대응관계를 식으로 나타낸 것을 고르세요",
+      "question": "patterns/desk-chair-02.svg?v=20260609-table-right-ellipsis",
+      "answer": "○ = □ × 4",
+      "choices": [
+        "○ = □ × 2",
+        "○ = □ × 4",
+        "○ = □ + 4",
+        "○ = □ × 4 + 2"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "multiply"
+      ]
+    },
+    {
+      "id": "desk-chair-pattern-03",
+      "type": "desk-chair-pattern",
+      "prompt": "책상 □이 4개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-03.svg?v=20260609-table-right-ellipsis",
+      "answer": "9개",
+      "choices": [
+        "7개",
+        "8개",
+        "9개",
+        "10개"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "plus"
+      ]
+    },
+    {
+      "id": "desk-chair-pattern-04",
+      "type": "desk-chair-pattern",
+      "prompt": "책상 □이 5개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-04.svg?v=20260609-table-right-ellipsis",
+      "answer": "14개",
+      "choices": [
+        "12개",
+        "14개",
+        "16개",
+        "18개"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "plus"
+      ]
+    },
+    {
+      "id": "desk-chair-pattern-05",
+      "type": "desk-chair-pattern",
+      "prompt": "대응관계를 식으로 나타낸 것을 고르세요",
+      "question": "patterns/desk-chair-05.svg?v=20260609-table-right-ellipsis",
+      "answer": "○ = □ × 2 + 2",
+      "choices": [
+        "○ = □ × 2 + 1",
+        "○ = □ × 2 + 2",
+        "○ = □ × 2 + 4",
+        "○ = □ × 4"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "rule"
+      ]
+    },
+    {
+      "id": "desk-chair-pattern-06",
+      "type": "desk-chair-pattern",
+      "prompt": "책상 □이 6개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-06.svg?v=20260609-table-right-ellipsis",
+      "answer": "6개",
+      "choices": [
+        "5개",
+        "6개",
+        "7개",
+        "8개"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "multiply"
+      ]
+    },
+    {
+      "id": "desk-chair-pattern-07",
+      "type": "desk-chair-pattern",
+      "prompt": "대응관계를 식으로 나타낸 것을 고르세요",
+      "question": "patterns/desk-chair-07.svg?v=20260609-table-right-ellipsis",
+      "answer": "○ = □ × 1 + 1",
+      "choices": [
+        "○ = □ × 1",
+        "○ = □ × 1 + 1",
+        "○ = □ × 2",
+        "○ = □ + 2"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "rule"
+      ]
+    },
+    {
+      "id": "desk-chair-pattern-08",
+      "type": "desk-chair-pattern",
+      "prompt": "책상 □이 5개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-08.svg?v=20260609-table-right-ellipsis",
+      "answer": "10개",
+      "choices": [
+        "8개",
+        "9개",
+        "10개",
+        "12개"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table"
+      ]
+    },
+    {
+      "id": "desk-chair-pattern-09",
+      "type": "desk-chair-pattern",
+      "prompt": "책상 □이 10개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-09.svg?v=20260609-table-right-ellipsis",
+      "answer": "22개",
+      "choices": [
+        "18개",
+        "20개",
+        "22개",
+        "24개"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table"
+      ]
+    },
+    {
+      "id": "desk-chair-pattern-10",
+      "type": "desk-chair-pattern",
+      "prompt": "표를 보고 대응관계를 식으로 나타낸 것을 고르세요",
+      "question": "patterns/desk-chair-10.svg?v=20260609-table-right-ellipsis",
+      "answer": "○ = □ × 3 + 1",
+      "choices": [
+        "○ = □ × 3",
+        "○ = □ × 3 + 1",
+        "○ = □ × 2 + 2",
+        "○ = □ + 3"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "rule"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-11",
+      "prompt": "책상 □이 7개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-11.svg?v=20260609-table-right-ellipsis",
+      "answer": "22개",
+      "choices": [
+        "19개",
+        "21개",
+        "22개",
+        "24개"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "hint"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-12",
+      "prompt": "책상 □이 5개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-12.svg?v=20260609-table-right-ellipsis",
+      "answer": "10개",
+      "choices": [
+        "8개",
+        "9개",
+        "10개",
+        "12개"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "hint"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-13",
+      "prompt": "책상 □이 10개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-13.svg?v=20260609-table-right-ellipsis",
+      "answer": "22개",
+      "choices": [
+        "18개",
+        "20개",
+        "22개",
+        "24개"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "hint"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-14",
+      "prompt": "표를 보고 대응관계를 식으로 나타낸 것을 고르세요",
+      "question": "patterns/desk-chair-14.svg?v=20260609-table-right-ellipsis",
+      "answer": "○ = □ × 3 + 1",
+      "choices": [
+        "○ = □ × 3",
+        "○ = □ × 3 + 1",
+        "○ = □ × 2 + 2",
+        "○ = □ + 3"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "rule",
+        "hint"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-15",
+      "prompt": "책상 □이 6개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-15.svg?v=20260609-table-right-ellipsis",
+      "answer": "6개",
+      "choices": [
+        "5개",
+        "6개",
+        "7개",
+        "8개"
+      ],
+      "difficulty": 1,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "hint"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-16",
+      "prompt": "표를 보고 대응관계를 식으로 나타낸 것을 고르세요",
+      "question": "patterns/desk-chair-16.svg?v=20260609-table-right-ellipsis",
+      "answer": "○ = □ × 1 + 1",
+      "choices": [
+        "○ = □ × 1",
+        "○ = □ × 1 + 1",
+        "○ = □ × 2",
+        "○ = □ + 2"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "rule",
+        "hint"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-17",
+      "prompt": "책상 □이 4개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-17.svg?v=20260609-table-right-ellipsis",
+      "answer": "16개",
+      "choices": [
+        "12개",
+        "14개",
+        "16개",
+        "18개"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "hint"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-18",
+      "prompt": "표를 보고 대응관계를 식으로 나타낸 것을 고르세요",
+      "question": "patterns/desk-chair-18.svg?v=20260609-table-right-ellipsis",
+      "answer": "○ = □ × 2 + 1",
+      "choices": [
+        "○ = □ × 2",
+        "○ = □ × 2 + 1",
+        "○ = □ + 2",
+        "○ = □ × 3"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "rule",
+        "hint"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-19",
+      "prompt": "책상 □이 5개일 때, 의자 ○ 수를 고르세요",
+      "question": "patterns/desk-chair-19.svg?v=20260609-table-right-ellipsis",
+      "answer": "14개",
+      "choices": [
+        "12개",
+        "14개",
+        "16개",
+        "18개"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "hint"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-20",
+      "prompt": "표를 보고 대응관계를 식으로 나타낸 것을 고르세요",
+      "question": "patterns/desk-chair-20.svg?v=20260609-table-right-ellipsis",
+      "answer": "○ = □ × 4 + 2",
+      "choices": [
+        "○ = □ × 4",
+        "○ = □ × 4 + 2",
+        "○ = □ × 2 + 4",
+        "○ = □ + 4"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "rule",
+        "hint"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-21",
+      "prompt": "표를 보고 대응관계를 식으로 나타낸 것을 고르세요",
+      "question": "patterns/desk-chair-21.svg?v=20260609-table-right-ellipsis",
+      "answer": "(의자 수) = (책상 수) × 2",
+      "choices": [
+        "(의자 수) = (책상 수) × 2",
+        "(의자 수) = (책상 수) + 2",
+        "(의자 수) = (책상 수) × 3",
+        "(의자 수) = (책상 수) × 2 + 1"
+      ],
+      "difficulty": 2,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "rule",
+        "word-formula"
+      ]
+    },
+    {
+      "type": "desk-chair-pattern",
+      "id": "desk-chair-pattern-22",
+      "prompt": "표를 보고 대응관계를 식으로 나타낸 것을 고르세요",
+      "question": "patterns/desk-chair-22.svg?v=20260609-table-right-ellipsis",
+      "answer": "(의자 수) = (책상 수) × 2 + 1",
+      "choices": [
+        "(의자 수) = (책상 수) × 2",
+        "(의자 수) = (책상 수) × 2 + 1",
+        "(의자 수) = (책상 수) + 2",
+        "(의자 수) = (책상 수) × 3"
+      ],
+      "difficulty": 3,
+      "tags": [
+        "pattern",
+        "desk",
+        "chair",
+        "table",
+        "rule",
+        "word-formula",
+        "hint"
+      ]
+    }
+  ]
+}

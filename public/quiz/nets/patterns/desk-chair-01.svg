@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540" role="img" aria-label="1단계부터 3단계까지 책상과 의자 대응식">
+  <style>
+    .bg{fill:#fffdf8}.panel{fill:#fff;stroke:#ded5c7;stroke-width:4}.title{font:800 34px sans-serif;fill:#211a14}.body{font:900 35px sans-serif;fill:#3a3028}.label{font:800 21px sans-serif;fill:#5a4a3a}.desk{fill:#fff;stroke:#ff2b16;stroke-width:6}.chair{fill:#fff;stroke:#0a46ff;stroke-width:6}
+  </style>
+  <rect class="bg" width="900" height="540"/>
+  <rect class="panel" x="28" y="24" width="844" height="492" rx="22"/>
+    <text class="body" x="58" y="92">책상 □이 5개일 때, 의자 ○는 몇 개일까요?</text>
+  <g transform="translate(82 178)">
+    <text class="label" x="-18" y="-44">1단계: 1 × 2 = 2</text>
+    <circle class="chair" cx="35" cy="0" r="17"/>
+    <rect class="desk" x="0" y="36" width="70" height="42"/>
+    <circle class="chair" cx="35" cy="116" r="17"/>
+  </g>
+  <g transform="translate(584 178)">
+    <text class="label" x="-18" y="-44">2단계: 2 × 2 = 4</text>
+    <circle class="chair" cx="35" cy="0" r="17"/>
+    <circle class="chair" cx="105" cy="0" r="17"/>
+    <rect class="desk" x="0" y="36" width="70" height="42"/>
+    <rect class="desk" x="70" y="36" width="70" height="42"/>
+    <circle class="chair" cx="35" cy="116" r="17"/>
+    <circle class="chair" cx="105" cy="116" r="17"/>
+  </g>
+  <g transform="translate(305 374)">
+    <text class="label" x="-18" y="-44">3단계: 3 × 2 = 6</text>
+    <circle class="chair" cx="35" cy="0" r="17"/>
+    <circle class="chair" cx="105" cy="0" r="17"/>
+    <circle class="chair" cx="175" cy="0" r="17"/>
+    <rect class="desk" x="0" y="36" width="70" height="42"/>
+    <rect class="desk" x="70" y="36" width="70" height="42"/>
+    <rect class="desk" x="140" y="36" width="70" height="42"/>
+    <circle class="chair" cx="35" cy="116" r="17"/>
+    <circle class="chair" cx="105" cy="116" r="17"/>
+    <circle class="chair" cx="175" cy="116" r="17"/>
+  </g>
+</svg>
