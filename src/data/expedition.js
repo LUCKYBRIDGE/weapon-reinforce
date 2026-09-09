@@ -946,7 +946,7 @@ export const sanitizeExpeditionRun = value => {
     'decision', 'defeat', 'returned', 'defeated',
   ]);
   const supportPhases = new Set([`${encounter.type}-intro`, 'decision', 'returned', 'defeated']);
-  if (encounter.choices.length === 2) supportPhases.add(`${encounter.type}-choice`);
+  if (encounter.choices?.length === 2) supportPhases.add(`${encounter.type}-choice`);
   const allowedPhases = encounter.type === 'enemy' ? enemyPhases : supportPhases;
   if (!allowedPhases.has(source.phase)) return null;
   const phase = source.phase;
