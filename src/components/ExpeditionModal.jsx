@@ -145,6 +145,9 @@ export default function ExpeditionModal({
   const isEvent = run.encounter?.type === 'event';
   const isPlayerStrike = run.lastAction?.actor === 'player';
   const isEnemyStrike = run.lastAction?.actor === 'enemy';
+  const isCriticalStrike = isPlayerStrike && run.lastAction?.critical;
+  const isGuardedHit = isEnemyStrike && (run.lastAction?.guarded || 0) > 0;
+  const isHealingStrike = isPlayerStrike && (run.lastAction?.healed || 0) > 0;
   const isEnemyTelegraph = run.phase === 'enemy-telegraph';
   const canChoose = run.phase === 'decision';
   const supportChoices = Array.isArray(run.encounter?.choices) ? run.encounter.choices : [];
@@ -157,6 +160,20 @@ export default function ExpeditionModal({
   const dialogueText = isEnemyTelegraph
     ? run.queuedEnemyAction?.telegraphText || run.lastAction?.text
     : run.lastAction?.text;
+  const combatFeedback = [
+    isCriticalStrike
+      ? { id: 'critical', icon: '✦', text: `공명 치명타 ×${Number(run.lastAction?.critMultiplier || 1).toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}` }
+      : null,
+    isGuardedHit
+      ? { id: 'guarded', icon: '🛡️', text: `피해 ${run.lastAction.guarded} 경감` }
+      : null,
+    isHealingStrike
+      ? { id: 'healed', icon: '✚', text: `적중 회복 +${run.lastAction.healed}` }
+      : null,
+    isPlayerStrike && (run.lastAction?.attackBonus || 0) > 0
+      ? { id: 'attack-bonus', icon: '⚔️', text: `도움 공격 +${run.lastAction.attackBonus}%` }
+      : null,
+  ].filter(Boolean);
   const rank = getExpeditionRenownRank(stats.renown);
   const held = battlePose?.held || {};
   const firstPerson = battlePose?.firstPerson || {};
@@ -258,7 +275,7 @@ export default function ExpeditionModal({
         </div>
 
         <section
-          className={`expedition-stage ${isPlayerStrike ? 'is-player-strike' : ''} ${isEnemyStrike ? 'is-enemy-strike' : ''} ${isEnemyTelegraph ? 'is-enemy-telegraph' : ''}`}
+          className={`expedition-stage ${isPlayerStrike ? 'is-player-strike' : ''} ${isEnemyStrike ? 'is-enemy-strike' : ''} ${isCriticalStrike ? 'is-critical-strike' : ''} ${isGuardedHit ? 'is-guarded-hit' : ''} ${isHealingStrike ? 'is-healing-strike' : ''} ${isEnemyTelegraph ? 'is-enemy-telegraph' : ''}`}
           style={stageStyle}
           aria-label={`${run.encounter.name} 조우 화면`}
         >
@@ -310,6 +327,13 @@ export default function ExpeditionModal({
           <div className="expedition-hit-flash" aria-hidden="true" />
 
           <div className="expedition-turn-badge">{getActionLabel(run)}</div>
+          {combatFeedback.length > 0 && (
+            <div className="expedition-combat-feedback" aria-label="이번 전투 효과">
+              {combatFeedback.map(item => (
+                <span key={item.id} className={`is-${item.id}`}>{item.icon} {item.text}</span>
+              ))}
+            </div>
+          )}
           <div className="expedition-dialogue" role="status" aria-live={speed === 1 ? 'polite' : 'off'} aria-atomic="true">
             <strong>{run.encounter.name}</strong>
             <p id="expedition-dialogue-text">{dialogueText}</p>
@@ -322,10 +346,15 @@ export default function ExpeditionModal({
             <strong>{run.encounter.roleLabel}</strong>
             <p>{run.encounter.traitDescription}</p>
           </div>
-          <div>
-            <span>현재 무기 특징</span>
-            <strong>{run.combatProfile.attackName}</strong>
-            <p>치명타 {Math.round((run.combatProfile.critChance || 0) * 100)}% · 기본 방어 {run.combatProfile.guard || 0}{run.combatProfile.healOnHit ? ` · 적중 회복 ${run.combatProfile.healOnHit}` : ''}</p>
+          <div className="expedition-weapon-profile">
+            <span>현재 무기 · 게임 전투 효과</span>
+            <strong>{run.combatProfile.gameTraitLabel || '고유 전투형'} · {run.combatProfile.attackName}</strong>
+            <p>
+              치명타 {Math.round((run.combatProfile.critChance || 0) * 100)}%
+              {' · '}치명 피해 ×{Number(run.combatProfile.critMultiplier || 1).toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}
+              {' · '}기본 방어 {run.combatProfile.guard || 0}
+              {run.combatProfile.healOnHit ? ` · 적중 회복 +${run.combatProfile.healOnHit}` : ''}
+            </p>
           </div>
           {run.usedSupply && (
             <div className="expedition-used-supply">
