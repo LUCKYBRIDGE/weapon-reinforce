@@ -160,8 +160,8 @@ for (const scenario of supplyScenarios) {
 
 const noSupplyResult = supplyResults.get('none');
 const bandageResult = supplyResults.get('travel-bandage');
-const clothResult = supplyResults.get('resonance-cloth');
-const pouchResult = supplyResults.get('rift-safety-pouch');
+const clothResult = supplyResults.get('maintenance-cloth');
+const pouchResult = supplyResults.get('safe-pouch');
 assert(results[5].completionRate <= 0.05, `+6 최심부 생존률이 ${(results[5].completionRate * 100).toFixed(1)}%로 5%를 넘습니다.`);
 assert(
   noSupplyResult.completionRate >= 0.20 && noSupplyResult.completionRate <= 0.30,
