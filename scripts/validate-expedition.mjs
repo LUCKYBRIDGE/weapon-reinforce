@@ -40,9 +40,9 @@ const lootTableIds = new Set(EXPEDITION_LOOT_TABLES.map(table => table.id));
 const sumLoot = loot => Object.values(loot || {}).reduce((sum, count) => sum + count, 0);
 
 assert(EXPEDITION_REGIONS.length >= 3, '탐사 지역은 최소 3곳이어야 합니다.');
-assert(EXPEDITION_ENEMIES.length >= 6, '탐사 적은 최소 6종이어야 합니다.');
-assert(EXPEDITION_NPCS.length >= 3, '탐사 NPC는 최소 3종이어야 합니다.');
-assert(EXPEDITION_EVENTS.length >= 3, '탐사 사건은 최소 3종이어야 합니다.');
+assert(EXPEDITION_ENEMIES.length >= 7, '1.2 탐사 적은 최소 7종이어야 합니다.');
+assert(EXPEDITION_NPCS.length >= 6, '1.2 탐사 NPC는 최소 6종이어야 합니다.');
+assert(EXPEDITION_EVENTS.length >= 6, '1.2 탐사 사건은 최소 6종이어야 합니다.');
 assert.equal(EXPEDITION_HISTORY_LAYERS.length, EXPEDITION_RULES.maxDepth, '7개 역사층 카드가 필요합니다.');
 assert.equal(EXPEDITION_RULES.version, 3, '탐사 진행 저장은 버전 3이어야 합니다.');
 assert.deepEqual(
@@ -70,6 +70,45 @@ for (const support of [...EXPEDITION_NPCS, ...EXPEDITION_EVENTS]) {
   }
 }
 
+const effectSignature = support => support.effects
+  .map(effect => `${effect.kind}:${effect.amount}`)
+  .sort()
+  .join('|');
+
+for (const region of EXPEDITION_REGIONS) {
+  const regionNpcs = EXPEDITION_NPCS.filter(npc => npc.regionId === region.id);
+  const regionEvents = EXPEDITION_EVENTS.filter(event => event.regionId === region.id);
+  const regionSupports = [...regionNpcs, ...regionEvents];
+
+  assert(regionNpcs.length >= 2, `${region.name} NPC 후보가 2종 미만입니다.`);
+  assert(regionEvents.length >= 2, `${region.name} 사건 후보가 2종 미만입니다.`);
+  assert(
+    new Set(regionNpcs.map(npc => npc.asset)).size >= 2,
+    `${region.name} NPC 이미지가 한 종류로 반복됩니다.`,
+  );
+  assert(
+    new Set(regionEvents.map(event => event.asset)).size >= 2,
+    `${region.name} 사건 이미지가 한 종류로 반복됩니다.`,
+  );
+  assert.equal(
+    new Set(regionSupports.map(effectSignature)).size,
+    regionSupports.length,
+    `${region.name} 지원 조우에 완전히 같은 효과 조합이 중복됩니다.`,
+  );
+}
+
+const bronzeNormalEnemies = EXPEDITION_ENEMIES.filter(enemy => (
+  enemy.regionId === 'bronze-mist-site'
+  && enemy.final !== true
+  && enemy.depthMin <= 5
+  && enemy.depthMax >= 6
+));
+assert(bronzeNormalEnemies.length >= 2, '청동 안개 5~6층 일반 적은 최소 2종이어야 합니다.');
+assert(
+  new Set(bronzeNormalEnemies.map(enemy => enemy.asset)).size >= 2,
+  '청동 안개 5~6층 일반 적 이미지가 한 종류로 반복됩니다.',
+);
+
 for (const fileName of EXPEDITION_ASSET_FILES) {
   await access(resolve(projectRoot, 'public', 'images', fileName));
 }
@@ -82,6 +121,36 @@ for (let depth = 1; depth <= EXPEDITION_RULES.maxDepth; depth += 1) {
   assert.equal(card.weaponId, weapon.id, `${depth}층 역사 카드와 무기 연표가 어긋났습니다.`);
   assert.equal(card.sourceUrl, weapon.sourceUrl, `${depth}층 역사 카드 출처가 무기 연표와 다릅니다.`);
   assert(card.sourceUrl.startsWith('https://'), `${depth}층 역사 카드 출처는 HTTPS여야 합니다.`);
+}
+
+const knownEncounterIds = new Set(encounterIds);
+for (let seed = 1; seed <= 200; seed += 1) {
+  let rngState = seed * 104729;
+  let recentEncounterIds = [];
+  let recentEncounterTypes = [];
+  let enemyStreak = 0;
+
+  for (let depth = 2; depth <= 6; depth += 1) {
+    const selected = selectExpeditionEncounter({
+      depth,
+      rngState,
+      recentEncounterIds,
+      recentEncounterTypes,
+      enemyStreak,
+    });
+    assert(knownEncounterIds.has(selected.encounter.id), `${seed}번 시드에서 알 수 없는 조우가 선택되었습니다.`);
+    assert.equal(
+      selected.encounter.regionId,
+      getExpeditionHistoryLayer(depth) && EXPEDITION_REGIONS.find(
+        region => depth >= region.depthMin && depth <= region.depthMax,
+      )?.id,
+      `${seed}번 시드 ${depth}층 조우 지역이 잘못되었습니다.`,
+    );
+    rngState = selected.rngState;
+    recentEncounterIds = selected.recentEncounterIds;
+    recentEncounterTypes = selected.recentEncounterTypes;
+    enemyStreak = selected.enemyStreak;
+  }
 }
 
 for (const encounter of EXPEDITION_ENCOUNTERS) {
@@ -326,5 +395,5 @@ assert.equal(sanitized.renown, 35);
 assert.deepEqual(sanitized.seenHistoryCardIds, [EXPEDITION_HISTORY_LAYERS[0].id]);
 
 console.log(
-  `연속 탐사 1.1 검증 통과 · 유형 우선 조우 60/23/17 · 지역 ${EXPEDITION_REGIONS.length} · 적 ${EXPEDITION_ENEMIES.length} · NPC ${EXPEDITION_NPCS.length} · 사건 ${EXPEDITION_EVENTS.length} · 역사층 ${EXPEDITION_HISTORY_LAYERS.length}`,
+  `연속 탐사 1.2-01 검증 통과 · 유형 우선 조우 60/23/17 · 지역 ${EXPEDITION_REGIONS.length} · 적 ${EXPEDITION_ENEMIES.length} · NPC ${EXPEDITION_NPCS.length} · 사건 ${EXPEDITION_EVENTS.length} · 역사층 ${EXPEDITION_HISTORY_LAYERS.length} · 시드 200개 다양성 검증`,
 );
