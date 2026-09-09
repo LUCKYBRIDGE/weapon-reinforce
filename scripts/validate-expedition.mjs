@@ -276,7 +276,28 @@ assert.equal(
   '정산 정보가 손상된 최종 탐사를 받아들였습니다.',
 );
 
-const npcSelection = selectExpeditionEncounter({ depth: 2, rngState: 1, random: 0.65 });
+const newRoadNpcSelection = selectExpeditionEncounter({
+  depth: 2,
+  rngState: 11,
+  recentEncounterIds: ['roadside-village-teacher'],
+  random: 0.65,
+});
+assert.equal(newRoadNpcSelection.encounter.id, 'wayside-provision-keeper', '1.2 신규 길목 NPC를 선택할 수 없습니다.');
+
+const newRoadEventSelection = selectExpeditionEncounter({
+  depth: 2,
+  rngState: 12,
+  recentEncounterIds: ['forgotten-maintenance-kit'],
+  random: 0.9,
+});
+assert.equal(newRoadEventSelection.encounter.id, 'rain-washed-waystation-chest', '1.2 신규 길목 사건을 선택할 수 없습니다.');
+
+const npcSelection = selectExpeditionEncounter({
+  depth: 2,
+  rngState: 1,
+  recentEncounterIds: ['wayside-provision-keeper'],
+  random: 0.65,
+});
 assert.equal(npcSelection.encounter.type, 'npc', '유형 가중치 구간에서 NPC를 선택할 수 없습니다.');
 let npcRun = {
   ...run,
@@ -296,7 +317,12 @@ assert(sumLoot(npcRun.lastDrop) > 0, 'NPC 조우의 가상 전리품이 없습�
 assert(npcRun.activeEffects.lootBonus > 0, '훈장의 다음 전리품 도움 효과가 없습니다.');
 assert.deepEqual(resolveNpcEncounter(npcRun), npcRun, 'NPC 도움 효과가 두 번 적용되었습니다.');
 
-const eventSelection = selectExpeditionEncounter({ depth: 2, rngState: 1, random: 0.9 });
+const eventSelection = selectExpeditionEncounter({
+  depth: 2,
+  rngState: 1,
+  recentEncounterIds: ['rain-washed-waystation-chest'],
+  random: 0.9,
+});
 assert.equal(eventSelection.encounter.type, 'event', '유형 가중치 구간에서 사건을 선택할 수 없습니다.');
 let eventRun = {
   ...run,
