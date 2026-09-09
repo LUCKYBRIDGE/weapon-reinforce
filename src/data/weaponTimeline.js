@@ -14,7 +14,7 @@ export const WEAPON_TIMELINE = {
     sourceUrl: 'https://www.dapa.go.kr/upload/pcm/_86035e05-f5df-4446-a164-57d5e14efd711780014911973.pdf',
     image: 'weapon_timeline_1.png',
     combatStyle: 'firearm',
-    combatProfile: { attackName: '정밀 2점사', critChance: 0.05, critMultiplier: 1.25, guard: 0, healOnHit: 0 },
+    combatProfile: { gameTraitLabel: '정밀 사격형', attackName: '정밀 2점사', critChance: 0.05, critMultiplier: 1.25, guard: 0, healOnHit: 0 },
     battlePose: {
       held: { left: 44, top: 36, width: 92, rotation: -8, flip: false },
       firstPerson: { left: 48, bottom: -18, width: 72, rotation: -7, flip: false },
@@ -33,7 +33,7 @@ export const WEAPON_TIMELINE = {
     sourceUrl: 'https://contents.history.go.kr/mobile/kc/view.do?code=kc_age_30&levelId=kc_r300500',
     image: 'weapon_timeline_2.png',
     combatStyle: 'polearm-slash',
-    combatProfile: { attackName: '큰 원호 베기', critChance: 0.08, critMultiplier: 1.3, guard: 1, healOnHit: 0 },
+    combatProfile: { gameTraitLabel: '원호 견제형', attackName: '큰 원호 베기', critChance: 0.08, critMultiplier: 1.3, guard: 1, healOnHit: 0 },
     battlePose: {
       held: { left: 36, top: 25, width: 112, rotation: -18, flip: false },
       firstPerson: { left: 38, bottom: -28, width: 92, rotation: -24, flip: false },
@@ -52,7 +52,7 @@ export const WEAPON_TIMELINE = {
     sourceUrl: 'https://contents.history.go.kr/front/km/print.do?levelId=km_014_0060_0030_0030_0020&whereStr=',
     image: 'weapon_timeline_3.png',
     combatStyle: 'heavy-slash',
-    combatProfile: { attackName: '양손 내려베기', critChance: 0.16, critMultiplier: 1.45, guard: 0, healOnHit: 0 },
+    combatProfile: { gameTraitLabel: '고위력 치명형', attackName: '양손 내려베기', critChance: 0.16, critMultiplier: 1.45, guard: 0, healOnHit: 0 },
     battlePose: {
       held: { left: 45, top: 23, width: 96, rotation: -12, flip: true },
       firstPerson: { left: 48, bottom: -26, width: 86, rotation: -18, flip: true },
@@ -71,7 +71,7 @@ export const WEAPON_TIMELINE = {
     sourceUrl: 'https://contents.history.go.kr/mobile/km/view.do?levelId=km_014_0050_0010_0020_0060',
     image: 'weapon_timeline_4.png',
     combatStyle: 'saber-slash',
-    combatProfile: { attackName: '빠른 발도', critChance: 0.18, critMultiplier: 1.3, guard: 1, healOnHit: 0 },
+    combatProfile: { gameTraitLabel: '발도 균형형', attackName: '빠른 발도', critChance: 0.18, critMultiplier: 1.3, guard: 1, healOnHit: 0 },
     battlePose: {
       held: { left: 48, top: 28, width: 82, rotation: -15, flip: false },
       firstPerson: { left: 50, bottom: -24, width: 78, rotation: -14, flip: false },
@@ -90,7 +90,7 @@ export const WEAPON_TIMELINE = {
     sourceUrl: 'https://contents.history.go.kr/mobile/kc/view.do?code=kc_age_10&levelId=kc_r101500',
     image: 'weapon_timeline_5.png',
     combatStyle: 'resonance',
-    combatProfile: { attackName: '일곱 갈래 공명', critChance: 0.12, critMultiplier: 1.35, guard: 3, healOnHit: 0 },
+    combatProfile: { gameTraitLabel: '공명 방호형', attackName: '일곱 갈래 공명', critChance: 0.12, critMultiplier: 1.35, guard: 3, healOnHit: 0 },
     battlePose: {
       held: { left: 55, top: 18, width: 58, rotation: 28, flip: false },
       firstPerson: { left: 57, bottom: -24, width: 54, rotation: 12, flip: false },
@@ -109,7 +109,7 @@ export const WEAPON_TIMELINE = {
     sourceUrl: 'https://www.museum.go.kr/MUSEUM/contents/M0502000000.do?relicId=1996&schM=view&searchId=search',
     image: 'weapon_timeline_6.png',
     combatStyle: 'dagger-thrust',
-    combatProfile: { attackName: '좁은 날 정밀 찌르기', critChance: 0.22, critMultiplier: 1.4, guard: 2, healOnHit: 1 },
+    combatProfile: { gameTraitLabel: '정밀 회복형', attackName: '좁은 날 정밀 찌르기', critChance: 0.22, critMultiplier: 1.4, guard: 2, healOnHit: 1 },
     battlePose: {
       held: { left: 50, top: 29, width: 76, rotation: -12, flip: false },
       firstPerson: { left: 54, bottom: -25, width: 72, rotation: -9, flip: false },
@@ -128,7 +128,7 @@ export const WEAPON_TIMELINE = {
     sourceUrl: 'https://contents.history.go.kr/mobile/kc/view.do?levelId=kc_r000300',
     image: 'weapon_timeline_7.png',
     combatStyle: 'dagger-thrust',
-    combatProfile: { attackName: '태고의 공명 찌르기', critChance: 0.28, critMultiplier: 1.5, guard: 3, healOnHit: 2 },
+    combatProfile: { gameTraitLabel: '태고 공명형', attackName: '태고의 공명 찌르기', critChance: 0.28, critMultiplier: 1.5, guard: 3, healOnHit: 2 },
     battlePose: {
       held: { left: 49, top: 28, width: 74, rotation: -10, flip: false },
       firstPerson: { left: 53, bottom: -24, width: 70, rotation: -8, flip: false },
