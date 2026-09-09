@@ -27,6 +27,8 @@ const getActionLabel = run => {
   if (run.phase === 'enemy-intro') return '적 조우';
   if (run.phase === 'npc-intro') return 'NPC 조우';
   if (run.phase === 'event-intro') return '사건 발견';
+  if (run.phase === 'npc-choice') return 'NPC의 제안';
+  if (run.phase === 'event-choice') return '현장 선택';
   if (run.phase === 'player-attack') return '내 공격 준비';
   if (run.phase === 'victory') return '전투 승리';
   if (run.phase === 'decision') return '진로 선택';
@@ -92,6 +94,7 @@ export default function ExpeditionModal({
   onToggleSpeed,
   onReturn,
   onContinue,
+  onChooseSupport,
   onSaveCheckpoint,
   onClose,
 }) {
@@ -99,6 +102,7 @@ export default function ExpeditionModal({
   const returnFocusRef = useRef(null);
   const runId = run?.runId || null;
   const isFinal = run?.phase === 'returned' || run?.phase === 'defeated';
+  const isSupportChoicePhase = ['npc-choice', 'event-choice'].includes(run?.phase);
 
   useEffect(() => {
     if (!runId) return undefined;
@@ -126,6 +130,14 @@ export default function ExpeditionModal({
     return () => window.cancelAnimationFrame(frameId);
   }, [isFinal, runId]);
 
+  useEffect(() => {
+    if (!runId || !isSupportChoicePhase) return undefined;
+    const frameId = window.requestAnimationFrame(() => {
+      dialogRef.current?.querySelector('[data-expedition-choice-focus]')?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isSupportChoicePhase, runId]);
+
   if (!run) return null;
 
   const isEnemy = run.encounter?.type === 'enemy';
@@ -135,6 +147,8 @@ export default function ExpeditionModal({
   const isEnemyStrike = run.lastAction?.actor === 'enemy';
   const isEnemyTelegraph = run.phase === 'enemy-telegraph';
   const canChoose = run.phase === 'decision';
+  const supportChoices = Array.isArray(run.encounter?.choices) ? run.encounter.choices : [];
+  const isSupportChoice = isSupportChoicePhase && supportChoices.length === 2;
   const atMaxDepth = run.depth >= EXPEDITION_RULES.maxDepth;
   const settlement = run.settlement;
   const pendingLootCount = getLootEntries(run.pendingLoot).reduce((sum, entry) => sum + entry.count, 0);
@@ -235,7 +249,7 @@ export default function ExpeditionModal({
             <button
               type="button"
               onClick={onToggleSpeed}
-              data-expedition-open-focus={!canChoose ? '' : undefined}
+              data-expedition-open-focus={!canChoose && !isSupportChoice ? '' : undefined}
               aria-label={`현재 ${speed}배속, ${speed === 1 ? '2배속으로 바꾸기' : '1배속으로 바꾸기'}`}
             >
               ×{speed} 속도
@@ -338,6 +352,29 @@ export default function ExpeditionModal({
           </div>
           <small>{run.encounter.historyLayer.certainty}</small>
         </aside>
+
+        {isSupportChoice && (
+          <section className="expedition-support-choice" aria-labelledby="expedition-support-choice-title">
+            <div>
+              <span>{isNpc ? 'NPC 선택 조우' : '사건 선택 조우'}</span>
+              <h3 id="expedition-support-choice-title">{run.encounter.choicePrompt}</h3>
+              <p>두 도움 중 하나만 적용됩니다. 선택 결과는 즉시 저장되며 이후 되돌릴 수 없습니다.</p>
+            </div>
+            <div className="expedition-choice-actions">
+              {supportChoices.map((choice, index) => (
+                <button
+                  type="button"
+                  key={choice.id}
+                  onClick={() => onChooseSupport(choice.id)}
+                  data-expedition-choice-focus={index === 0 ? '' : undefined}
+                >
+                  <strong>{choice.label}</strong>
+                  <small>{choice.description}</small>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="expedition-loot" aria-label="현재 임시 전리품">
           <div className="expedition-loot-summary">
