@@ -111,6 +111,7 @@
 - `src/hooks/useQuizSession.js`: 문제팩 선택·로딩, 세션/누적 통계, 오답 대기 타이머, 퀴즈 통계 저장
 - `src/hooks/useEnhancementSession.js`: 강화 연출 상태, 타이밍 입력·판정, 타격/입자/플래시 효과
 - `src/hooks/useExpeditionSession.js`: 탐사 run/stats/economy, 자동 진행, 귀환·패배 정산, settled 복구, 준비물 거래·장착
+- `src/hooks/useGameStorage.js`: 저장 실패 감지, 저장 관리자 상태, JSON 저장 파일 내보내기·불러오기
 
 ### 데이터·상태 로직
 
@@ -216,6 +217,14 @@ PR 검증 워크플로와 GitHub Pages 배포 워크플로 모두 `npm run valid
 - 기존 `weaponActiveExpeditionV1`, `weaponExpeditionStatsV1`, `weaponExpeditionEconomyV1` 저장 key와 저장 시점, 패배 시 엽전 보정 및 중복 정산 방지 규칙은 유지했다.
 - `App.jsx`에는 현재 무기·엽전·강화 상태와 탐사 훅을 연결하고 모달에 결과를 전달하는 역할만 남겼다.
 
+## 2026-09-09 P1 구조 개선 4차
+
+- 브라우저 저장 실패 감지와 quota/차단 상태 분류를 `src/hooks/useGameStorage.js`로 분리했다.
+- 저장 관리자 모달의 열기/닫기 상태와 JSON 저장 파일 export/import 경계를 훅으로 이동했다.
+- 진행 중 탐사는 저장 파일 생성 직전에 `useExpeditionSession`의 checkpoint flush를 호출하는 얇은 adapter만 `App.jsx`에 유지해 훅 간 직접 의존성을 만들지 않았다.
+- 기존 저장 파일 형식, 1MB 상한, checksum·version 검증, 허용 key 경계, import rollback 및 불러오기 후 reload 동작은 `gameSave.js` 계약을 그대로 사용한다.
+- 이 작업으로 초기 P1 구조 개선 목표인 퀴즈·강화·탐사·저장 경계 분리를 완료했다.
+
 ## 다음 개발 우선순위
 
 ### P0 — 1.1 기준선 보존
@@ -232,13 +241,23 @@ PR 검증 워크플로와 GitHub Pages 배포 워크플로 모두 `npm run valid
 - [x] 퀴즈 세션
 - [x] 강화 세션 상태·입력
 - [x] 탐사 상태·정산
-- [ ] 저장 실패 및 백업 경계
+- [x] 저장 실패 및 백업 경계
 
-분리는 기존 데이터 API와 검증 스크립트를 유지하는 범위에서 진행한다.
+초기 P1 분리 목표는 완료했다. 추가 분리는 파일 크기 자체를 줄이기 위한 목적이 아니라, 실제 변경 비용이나 결합도가 높은 책임이 확인될 때만 진행한다.
 
-### P2 — 콘텐츠 확장
+### P2 — 기능·콘텐츠 개선
 
-구조 개선 뒤 다음 항목을 독립적으로 확장할 수 있다.
+P1 구조 개선이 완료되었으므로 다음 작업부터는 사용자 체감 개선을 우선한다. 후보 우선순위는 다음과 같다.
+
+1. 탐사 조우·전투의 반복감 점검 및 적/NPC/사건 다양화
+2. 무기별 전투 개성 및 시각 피드백 강화
+3. 역사 기록 카드와 학습 정보 확장
+4. 탐사 준비물 선택지 확대
+5. 강화·탐사 밸런스 재시뮬레이션
+
+구조 변경은 위 기능 작업에 필요한 범위에서만 추가한다.
+
+기존 확장 후보는 다음과 같다.
 
 - 적/NPC/사건 다양화
 - 무기별 전투 개성 조정
