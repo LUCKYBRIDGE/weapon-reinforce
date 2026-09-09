@@ -26,11 +26,6 @@ import {
   readStoredString,
   sanitizeCountRecord,
 } from './data/safeStorage.js';
-import {
-  exportGameSave,
-  getBrowserGameStorage,
-  importGameSave,
-} from './data/gameSave.js';
 import ExpeditionModal from './components/ExpeditionModal.jsx';
 import ExpeditionWorkshopModal from './components/ExpeditionWorkshopModal.jsx';
 import HistoryArchiveModal from './components/HistoryArchiveModal.jsx';
@@ -38,6 +33,7 @@ import SaveManagerModal from './components/SaveManagerModal.jsx';
 import useQuizSession from './hooks/useQuizSession.js';
 import useEnhancementSession from './hooks/useEnhancementSession.js';
 import useExpeditionSession from './hooks/useExpeditionSession.js';
+import useGameStorage from './hooks/useGameStorage.js';
 
 const SHOW_DEV_TOOLS = import.meta.env.DEV
   && typeof window !== 'undefined'
@@ -75,12 +71,6 @@ const TEST_ENHANCEMENT_SCENARIOS = [
 ];
 const getAssetUrl = (path) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`;
 const getImageUrl = (fileName) => getAssetUrl(`images/${fileName}`);
-const isStorageQuotaError = error => (
-  error?.name === 'QuotaExceededError'
-  || error?.name === 'NS_ERROR_DOM_QUOTA_REACHED'
-  || error?.code === 22
-  || error?.code === 1014
-);
 const TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 const chromaKeyImageCache = new Map();
 
@@ -467,21 +457,9 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState(() => readStoredString('soundEnabled', 'true', ['true', 'false']) !== 'false');
   const [curiosityDrop, setCuriosityDrop] = useState(null);
   const [pendingCuriositySale, setPendingCuriositySale] = useState(null);
-  const [storageSaveFailure, setStorageSaveFailure] = useState(null);
 
   // Cross-system overlay animation state
   const [floatingTexts, setFloatingTexts] = useState([]);
-
-  const reportStorageSaveFailure = useCallback(error => {
-    const quotaExceeded = isStorageQuotaError(error);
-    setStorageSaveFailure(current => current || {
-      kind: quotaExceeded ? 'quota' : 'blocked',
-      title: quotaExceeded ? '자동 저장 공간이 부족합니다.' : '브라우저 자동 저장이 차단되었습니다.',
-      message: quotaExceeded
-        ? '이 기기의 브라우저 저장 공간을 정리한 뒤 저장을 다시 확인해 주세요.'
-        : '시크릿 모드나 브라우저 설정에서 이 사이트의 저장이 허용되어 있는지 확인해 주세요.',
-    });
-  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -527,7 +505,6 @@ function App() {
   const [showCuriosityModal, setShowCuriosityModal] = useState(false);
   const [showRestoreShopModal, setShowRestoreShopModal] = useState(false);
   const [showHistoryArchiveModal, setShowHistoryArchiveModal] = useState(false);
-  const [showSaveManagerModal, setShowSaveManagerModal] = useState(false);
   const [maxTierToday, setMaxTierToday] = useState(() => readStoredNumber('maxTierToday', 1, { min: 1, max: MAX_WEAPON_TIER }));
   const [maxPathToday, setMaxPathToday] = useState(() => {
     const saved = readStoredString('maxPathToday', 'null', ['null', TIMELINE_PATH]);
@@ -560,6 +537,19 @@ function App() {
   const playSfx = useCallback((name) => {
     playSoundEffect(name, soundEnabled);
   }, [soundEnabled]);
+
+  const {
+    storageSaveFailure,
+    showSaveManagerModal,
+    reportStorageSaveFailure,
+    openSaveManager,
+    closeSaveManager,
+    exportGameSaveFile,
+    importGameSaveFile,
+  } = useGameStorage({
+    playSfx,
+    addLog,
+  });
 
   const {
     isEnhancing,
@@ -978,46 +968,11 @@ function App() {
     addLog(`🏷️ 칭호 [${title.name}] 달성 보상 +${reward}냥`, 'success');
   };
 
-  const handleExportGameSave = () => {
-    let text;
-    try {
-      if (expedition) flushActiveExpedition();
-      const storage = getBrowserGameStorage();
-      text = exportGameSave(storage);
-    } catch (error) {
-      if (['STORAGE_UNAVAILABLE', 'STORAGE_WRITE_FAILED'].includes(error?.code)) {
-        reportStorageSaveFailure(error);
-      }
-      throw error;
-    }
-    const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    anchor.href = url;
-    anchor.download = `weapon-reinforce-save-${stamp}.json`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
-    playSfx('success');
-    addLog('💾 현재 진행의 저장 데이터 파일을 기기에 보관했습니다.', 'success');
-    return '저장 데이터 파일을 내려받았습니다. 기기의 다운로드 목록을 확인하세요.';
-  };
-
-  const handleImportGameSave = async text => {
-    try {
-      const storage = getBrowserGameStorage();
-      importGameSave(storage, text);
-    } catch (error) {
-      if (['STORAGE_UNAVAILABLE', 'STORAGE_WRITE_FAILED'].includes(error?.code)) {
-        reportStorageSaveFailure(error);
-      }
-      throw error;
-    }
-    playSfx('success');
-    window.location.reload();
-  };
+  const handleExportGameSave = useCallback(() => (
+    exportGameSaveFile({
+      beforeExport: expedition ? flushActiveExpedition : undefined,
+    })
+  ), [expedition, exportGameSaveFile, flushActiveExpedition]);
 
   const handleRestorePurchase = (targetTier) => {
     if (isGameplayLocked) return;
@@ -1703,7 +1658,7 @@ function App() {
               disabled={isGameplayLocked}
               onClick={() => {
                 playSfx('page');
-                setShowSaveManagerModal(true);
+                openSaveManager();
               }}
             >
               💾 저장·백업
@@ -1754,7 +1709,7 @@ function App() {
             type="button"
             className="save-export-btn"
             disabled={isGameplayLocked}
-            onClick={() => setShowSaveManagerModal(true)}
+            onClick={openSaveManager}
           >
             💾 파일 백업 열기
           </button>
@@ -2354,8 +2309,8 @@ function App() {
               : '대장간에서 안전하게 저장됨',
           }}
           onExport={handleExportGameSave}
-          onImport={handleImportGameSave}
-          onClose={() => setShowSaveManagerModal(false)}
+          onImport={importGameSaveFile}
+          onClose={closeSaveManager}
         />
       )}
 
