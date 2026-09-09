@@ -677,7 +677,7 @@ function App() {
         reportStorageSaveFailure(error);
       }
     }
-  }, [reportStorageSaveFailure]);
+  }, [addLog, reportStorageSaveFailure]);
 
   useEffect(() => {
     try {
