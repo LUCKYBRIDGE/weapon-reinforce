@@ -10,6 +10,7 @@ import {
 } from '../src/data/expedition.js';
 import { TIMELINE_UPGRADE_RATES } from '../src/data/weaponTimeline.js';
 import { QUIZ_REFERENCE_REWARD } from '../src/data/quizCatalog.js';
+import { EXPEDITION_SUPPLIES } from '../src/data/expeditionEconomy.js';
 
 const RUNS_PER_TIER = 5_000;
 const REINFORCEMENT_JOURNEYS = 20_000;
@@ -85,6 +86,66 @@ for (const result of results) {
 }
 
 console.log(`탐사 단계별 ${RUNS_PER_TIER.toLocaleString()}회, 총 ${(RUNS_PER_TIER * 7).toLocaleString()}회 시뮬레이션 통과`);
+
+const simulateExpeditionCompletion = ({ tier, supply, seed }) => {
+  const random = createSeededRandom(seed);
+  let completed = 0;
+  let deaths = 0;
+  let depthTotal = 0;
+
+  for (let run = 0; run < RUNS_PER_TIER; run += 1) {
+    let expedition = createExpeditionRun({
+      runId: `supply-${supply?.id || 'none'}-${tier}-${run}`,
+      weaponTier: tier,
+      weaponName: `+${tier} 무기`,
+      seed: Math.floor(random() * 0xFFFFFFFF),
+      supply,
+    });
+    let turns = 0;
+
+    while (!['defeat', 'decision'].includes(expedition.phase) || expedition.depth < EXPEDITION_RULES.maxDepth) {
+      if (expedition.phase === 'enemy-intro') expedition = beginEnemyCombat(expedition);
+      else if (['player-attack', 'enemy-telegraph', 'enemy-attack'].includes(expedition.phase)) {
+        expedition = advanceExpeditionCombat(expedition, random);
+        if (expedition.lastAction.actor === 'player' || expedition.lastAction.actor === 'enemy') turns += 1;
+      } else if (expedition.phase === 'victory') expedition = finishVictoryScene(expedition);
+      else if (expedition.phase === 'npc-intro') expedition = resolveNpcEncounter(expedition);
+      else if (expedition.phase === 'event-intro') expedition = resolveEventEncounter(expedition);
+      else if (expedition.phase === 'decision') expedition = continueExpedition(expedition);
+      else break;
+
+      assert(turns < 100, `+${tier} 준비물 비교 탐사가 100턴 안에 끝나지 않습니다.`);
+      if (expedition.phase === 'defeat') break;
+      if (expedition.phase === 'decision' && expedition.depth >= EXPEDITION_RULES.maxDepth) break;
+    }
+
+    if (expedition.phase === 'defeat') deaths += 1;
+    else completed += 1;
+    depthTotal += expedition.depth;
+  }
+
+  return {
+    completionRate: completed / RUNS_PER_TIER,
+    deathRate: deaths / RUNS_PER_TIER,
+    averageDepth: depthTotal / RUNS_PER_TIER,
+  };
+};
+
+console.log('\n+7 최심부 생존 준비물 비교');
+const supplyScenarios = [
+  { id: 'none', name: '준비물 없음', supply: null },
+  ...EXPEDITION_SUPPLIES.map(supply => ({ id: supply.id, name: supply.name, supply })),
+];
+for (const [index, scenario] of supplyScenarios.entries()) {
+  const result = simulateExpeditionCompletion({
+    tier: 7,
+    supply: scenario.supply,
+    seed: 20261200 + index,
+  });
+  console.log(
+    `${scenario.name}: 최심부 생존 ${(result.completionRate * 100).toFixed(1)}% · 사망 ${(result.deathRate * 100).toFixed(1)}% · 평균 깊이 ${result.averageDepth.toFixed(2)}`,
+  );
+}
 
 const simulateReinforcementJourney = (timingBonus, seed) => {
   const random = createSeededRandom(seed);
