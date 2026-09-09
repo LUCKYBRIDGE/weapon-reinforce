@@ -349,6 +349,23 @@ assert(mixedRestore.cost > mixedNoRestore.cost, '비싼 복원 무기고가 복�
 assert(goodPerfectRestore.attempts < goodPerfectNoRestore.attempts, 'GOOD/PERFECT 혼합에서 복원 무기고가 평균 시도 수를 줄이지 못합니다.');
 assert(goodPerfectRestore.cost > goodPerfectNoRestore.cost, 'GOOD/PERFECT 혼합에서 복원 무기고가 비용 trade-off를 만들지 못합니다.');
 
+const missReferenceQuestions = missNoRestore.cost / QUIZ_REFERENCE_REWARD;
+const mixedReferenceQuestions = mixedNoRestore.cost / QUIZ_REFERENCE_REWARD;
+const goodPerfectReferenceQuestions = goodPerfectNoRestore.cost / QUIZ_REFERENCE_REWARD;
+const perfectReferenceQuestions = perfectNoRestore.cost / QUIZ_REFERENCE_REWARD;
+const mixedRestoreCostRatio = mixedRestore.cost / mixedNoRestore.cost;
+const mixedRestoreAttemptReduction = 1 - mixedRestore.attempts / mixedNoRestore.attempts;
+
+assert(missReferenceQuestions <= 180, `대성공 포함 MISS 완주가 기준팩 평균 ${missReferenceQuestions.toFixed(1)}문제로 180문제를 넘습니다.`);
+assert(mixedReferenceQuestions <= 160, `타이밍 창 비례 완주가 기준팩 평균 ${mixedReferenceQuestions.toFixed(1)}문제로 160문제를 넘습니다.`);
+assert(goodPerfectReferenceQuestions <= 135, `GOOD/PERFECT 혼합 완주가 기준팩 평균 ${goodPerfectReferenceQuestions.toFixed(1)}문제로 135문제를 넘습니다.`);
+assert(perfectReferenceQuestions <= 115, `PERFECT 완주가 기준팩 평균 ${perfectReferenceQuestions.toFixed(1)}문제로 115문제를 넘습니다.`);
+assert(mixedRestoreAttemptReduction >= 0.5, '최고 단계 즉시 복원이 평균 강화 시도를 50% 이상 줄이지 못합니다.');
+assert(
+  mixedRestoreCostRatio >= 1.5 && mixedRestoreCostRatio <= 2.5,
+  `복원 무기고 비용 trade-off가 기준 범위 1.5~2.5배를 벗어났습니다: ${mixedRestoreCostRatio.toFixed(2)}배`,
+);
+
 console.log('\n+1 → +7 완주 보수적 기준 (대성공·복원 무기고 미사용)');
 console.log(`타이밍 미입력: 평균 ${conservativeBaseJourney.attempts.toFixed(1)}회 시도 · ${Math.round(conservativeBaseJourney.cost).toLocaleString()}냥 · 약 ${(conservativeBaseJourney.cost / QUIZ_REFERENCE_REWARD).toFixed(1)}문제`);
 console.log(`항상 PERFECT: 평균 ${conservativePerfectJourney.attempts.toFixed(1)}회 시도 · ${Math.round(conservativePerfectJourney.cost).toLocaleString()}냥 · 약 ${(conservativePerfectJourney.cost / QUIZ_REFERENCE_REWARD).toFixed(1)}문제`);
