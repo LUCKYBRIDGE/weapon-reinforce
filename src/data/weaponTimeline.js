@@ -159,6 +159,40 @@ export const RESTORE_SHOP_PRICES = {
   5: 2400,
 };
 
+export const GREAT_SUCCESS_RATES = {
+  double: 3,
+  triple: 1,
+  falseAlarm: 4,
+};
+
+export const TIMING_GRADE_THRESHOLDS = {
+  perfectDistance: 8,
+  goodDistance: 20,
+};
+
+export const rollGreatSuccessStepCount = (currentTier, random = Math.random) => {
+  const maxTier = Math.max(...Object.keys(WEAPON_TIMELINE).map(Number));
+  const safeTier = Math.max(1, Math.min(maxTier, Math.trunc(Number(currentTier) || 1)));
+  const maxSteps = Math.min(3, maxTier - safeTier);
+  if (maxSteps <= 1) return 1;
+
+  const roll = random() * 100;
+  if (maxSteps >= 3) {
+    if (roll < GREAT_SUCCESS_RATES.triple) return 3;
+    if (roll < GREAT_SUCCESS_RATES.triple + GREAT_SUCCESS_RATES.double) return 2;
+    return 1;
+  }
+  return roll < GREAT_SUCCESS_RATES.double ? 2 : 1;
+};
+
+export const getMaxRestorableTier = (maxTierEver) => {
+  const maxRestoreTier = Math.max(...Object.keys(RESTORE_SHOP_PRICES).map(Number));
+  return Math.min(
+    Math.max(1, Math.trunc(Number(maxTierEver) || 1) - 2),
+    maxRestoreTier,
+  );
+};
+
 export const CURIOSITY_RARITIES = {
   common: { label: '흔한 괴작', color: '#cbd5e1' },
   uncommon: { label: '드문 괴작', color: '#86efac' },
