@@ -51,6 +51,28 @@ assert.deepEqual(
   '중간층 조우 유형 확률은 60/23/17이어야 합니다.',
 );
 
+const weaponEntries = Object.values(WEAPON_TIMELINE);
+assert.equal(weaponEntries.length, 7, '전투 개성을 검증할 무기는 7종이어야 합니다.');
+assert.equal(
+  new Set(weaponEntries.map(weapon => weapon.combatProfile?.gameTraitLabel)).size,
+  weaponEntries.length,
+  '무기 7종의 게임 전투 태그가 서로 구분되지 않습니다.',
+);
+assert.equal(
+  new Set(weaponEntries.map(weapon => weapon.combatProfile?.attackName)).size,
+  weaponEntries.length,
+  '무기 7종의 전투 공격명이 서로 구분되지 않습니다.',
+);
+for (const weapon of weaponEntries) {
+  const profile = weapon.combatProfile;
+  assert(profile?.gameTraitLabel, `${weapon.id}의 게임 전투 태그가 없습니다.`);
+  assert(profile?.attackName, `${weapon.id}의 전투 공격명이 없습니다.`);
+  assert(Number(profile.critChance) >= 0 && Number(profile.critChance) <= 1, `${weapon.id} 치명타 확률이 범위를 벗어났습니다.`);
+  assert(Number(profile.critMultiplier) >= 1, `${weapon.id} 치명타 배율이 1 미만입니다.`);
+  assert(Number(profile.guard) >= 0, `${weapon.id} 기본 방어가 음수입니다.`);
+  assert(Number(profile.healOnHit) >= 0, `${weapon.id} 적중 회복이 음수입니다.`);
+}
+
 const encounterIds = EXPEDITION_ENCOUNTERS.map(({ id }) => id);
 assert.equal(new Set(encounterIds).size, encounterIds.length, '적·NPC·사건 ID가 중복되었습니다.');
 assert(EXPEDITION_ENEMIES.every(enemy => enemy.fictional === true), '실제 역사 인물을 전투 적으로 사용하면 안 됩니다.');
@@ -240,6 +262,54 @@ const clothRun = createExpeditionRun({ runId: 'cloth-stats', weaponTier: 3, weap
 assert.equal(bandageRun.playerMaxHp, plainRun.playerMaxHp + 15, '여행 붕대가 최대 체력을 올리지 않습니다.');
 assert.equal(clothRun.playerAttack.min, plainRun.playerAttack.min + 3, '공명 손질 천이 공격력을 올리지 않습니다.');
 assert.equal(bandageRun.usedSupply.id, bandage.id, '사용 준비물이 진행 저장에 남지 않습니다.');
+
+let feedbackRun = createExpeditionRun({
+  runId: 'weapon-feedback',
+  weaponTier: 7,
+  weaponName: WEAPON_TIMELINE[7].name,
+  seed: 17,
+});
+feedbackRun = beginEnemyCombat(feedbackRun);
+feedbackRun = {
+  ...feedbackRun,
+  playerHp: feedbackRun.playerMaxHp - 10,
+  enemyHp: feedbackRun.enemyMaxHp,
+};
+feedbackRun = advanceExpeditionCombat(feedbackRun, () => 0);
+assert.equal(feedbackRun.lastAction.actor, 'player');
+assert.equal(feedbackRun.lastAction.attackName, WEAPON_TIMELINE[7].combatProfile.attackName);
+assert.equal(feedbackRun.lastAction.critical, true, '치명타 발생이 구조화된 전투 피드백에 남지 않습니다.');
+assert.equal(feedbackRun.lastAction.critMultiplier, WEAPON_TIMELINE[7].combatProfile.critMultiplier);
+assert.equal(feedbackRun.lastAction.healed, 2, '비파형동검 적중 회복이 구조화된 피드백에 남지 않습니다.');
+const restoredFeedbackRun = sanitizeExpeditionRun(JSON.parse(JSON.stringify(feedbackRun)));
+assert(restoredFeedbackRun, '전투 피드백이 포함된 진행을 복구하지 못했습니다.');
+assert.equal(restoredFeedbackRun.lastAction.critical, true);
+assert.equal(restoredFeedbackRun.lastAction.healed, 2);
+assert.equal(restoredFeedbackRun.combatProfile.gameTraitLabel, WEAPON_TIMELINE[7].combatProfile.gameTraitLabel);
+
+let guardedRun = createExpeditionRun({
+  runId: 'weapon-guard-feedback',
+  weaponTier: 5,
+  weaponName: WEAPON_TIMELINE[5].name,
+  seed: 19,
+});
+guardedRun = beginEnemyCombat(guardedRun);
+guardedRun = {
+  ...guardedRun,
+  phase: 'enemy-telegraph',
+  queuedEnemyAction: {
+    turn: 1,
+    attackName: '방어 검증 공격',
+    telegraphText: '방어 검증 공격을 준비한다.',
+    rawDamage: 20,
+    multiplier: 100,
+    power: false,
+  },
+};
+const guardedHpBefore = guardedRun.playerHp;
+guardedRun = advanceExpeditionCombat(guardedRun);
+assert.equal(guardedRun.lastAction.guarded, 3, '칠지도 기본 방어 3의 실제 피해 경감량이 피드백에 남지 않습니다.');
+assert.equal(guardedHpBefore - guardedRun.playerHp, 17, '구조화 피드백 추가로 실제 방어 계산이 달라졌습니다.');
 
 let run = createExpeditionRun({ runId: 'return-flow', weaponTier: 3, weaponName: '선조대 장도·쌍수도', seed: 777 });
 assert.equal(run.depth, 1);
@@ -526,5 +596,5 @@ assert.equal(sanitized.renown, 35);
 assert.deepEqual(sanitized.seenHistoryCardIds, [EXPEDITION_HISTORY_LAYERS[0].id]);
 
 console.log(
-  `연속 탐사 1.2-02 검증 통과 · 유형 우선 조우 60/23/17 · 지역 ${EXPEDITION_REGIONS.length} · 적 ${EXPEDITION_ENEMIES.length} · NPC ${EXPEDITION_NPCS.length} · 사건 ${EXPEDITION_EVENTS.length} · 선택형 NPC ${choiceNpcs.length} · 선택형 사건 ${choiceEvents.length} · 저장/복구 선택 검증`,
+  `연속 탐사 1.2-04 검증 통과 · 유형 우선 조우 60/23/17 · 무기 전투 태그 7종 · 치명타/방어/회복 피드백 저장 복구 · 적 ${EXPEDITION_ENEMIES.length} · NPC ${EXPEDITION_NPCS.length} · 사건 ${EXPEDITION_EVENTS.length}`,
 );

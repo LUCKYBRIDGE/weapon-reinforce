@@ -409,6 +409,10 @@ const createLastAction = ({ id, actor = 'system', text, ...rest }) => ({
   power: rest.power === true,
   telegraph: rest.telegraph === true,
   attackName: safeText(rest.attackName, '', 80),
+  healed: safeInteger(rest.healed, 0, 0, 999),
+  guarded: safeInteger(rest.guarded, 0, 0, 999),
+  attackBonus: safeInteger(rest.attackBonus, 0, 0, 99),
+  critMultiplier: safeNumber(rest.critMultiplier, 1, 1, 5),
   text: safeText(text, '', 360),
 });
 
@@ -558,6 +562,9 @@ export const advanceExpeditionCombat = (run, random) => {
           attackName: run.combatProfile.attackName,
           damage,
           critical: isCritical,
+          healed,
+          attackBonus,
+          critMultiplier: criticalMultiplier,
           text: `${actionText} · 전리품 ${countLoot(lootResult.loot)}개 발견`,
         }),
       };
@@ -580,6 +587,9 @@ export const advanceExpeditionCombat = (run, random) => {
         attackName: run.combatProfile.attackName,
         damage,
         critical: isCritical,
+        healed,
+        attackBonus,
+        critMultiplier: criticalMultiplier,
         text: actionText,
       }),
     };
@@ -591,7 +601,9 @@ export const advanceExpeditionCombat = (run, random) => {
     const baseGuard = safeInteger(run.combatProfile?.guard, 0, 0, 99);
     const guardBonus = safeInteger(run.activeEffects?.nextGuardBonus, 0, 0, 99);
     const totalGuard = baseGuard + guardBonus;
-    const damage = Math.max(1, safeInteger(queued.rawDamage, 1, 1, 9999) - totalGuard);
+    const rawDamage = safeInteger(queued.rawDamage, 1, 1, 9999);
+    const damage = Math.max(1, rawDamage - totalGuard);
+    const guarded = Math.max(0, rawDamage - damage);
     const playerHp = clamp(run.playerHp - damage, 0, run.playerMaxHp);
     return {
       ...run,
@@ -607,7 +619,8 @@ export const advanceExpeditionCombat = (run, random) => {
         attackName: queued.attackName,
         damage,
         power: queued.power,
-        text: `${run.encounter.name}의 ${queued.attackName}! ${damage} 피해${queued.power ? ' · 강공격' : ''}${totalGuard ? ` · 방어 ${totalGuard}` : ''}`,
+        guarded,
+        text: `${run.encounter.name}의 ${queued.attackName}! ${damage} 피해${queued.power ? ' · 강공격' : ''}${guarded ? ` · 피해 ${guarded} 경감` : ''}`,
       }),
     };
   }
@@ -997,6 +1010,10 @@ export const sanitizeExpeditionRun = value => {
     critical: source.lastAction?.critical,
     power: source.lastAction?.power,
     telegraph: source.lastAction?.telegraph,
+    healed: source.lastAction?.healed,
+    guarded: source.lastAction?.guarded,
+    attackBonus: source.lastAction?.attackBonus,
+    critMultiplier: source.lastAction?.critMultiplier,
     text: safeText(source.lastAction?.text, encounter.intro, 360),
   });
 
