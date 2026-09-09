@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { TIMING_BONUS } from '../data/weaponTimeline.js';
+import { TIMING_BONUS, TIMING_GRADE_THRESHOLDS } from '../data/weaponTimeline.js';
 
 const INITIAL_TIMING_WINDOW = { active: false, grade: null, position: null };
 const TIMING_CYCLE_MS = 1800;
@@ -90,7 +90,11 @@ export default function useEnhancementSession({ playSfx, addLog }) {
     const cycleProgress = ((Date.now() - timingStartedAtRef.current) % TIMING_CYCLE_MS) / TIMING_CYCLE_MS;
     const position = cycleProgress <= 0.5 ? cycleProgress * 200 : (1 - cycleProgress) * 200;
     const distanceFromCenter = Math.abs(position - 50);
-    const grade = distanceFromCenter <= 8 ? 'perfect' : distanceFromCenter <= 20 ? 'good' : 'miss';
+    const grade = distanceFromCenter <= TIMING_GRADE_THRESHOLDS.perfectDistance
+      ? 'perfect'
+      : distanceFromCenter <= TIMING_GRADE_THRESHOLDS.goodDistance
+        ? 'good'
+        : 'miss';
 
     timingGradeRef.current = grade;
     setTimingWindow({ active: false, grade, position });
