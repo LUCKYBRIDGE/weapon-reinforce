@@ -40,28 +40,6 @@ export default function useEnhancementSession({ playSfx, addLog }) {
     return timingGradeRef.current;
   }, []);
 
-  const handleTimingHit = useCallback(() => {
-    if (!timingWindow.active || !timingStartedAtRef.current) return;
-
-    const cycleProgress = ((Date.now() - timingStartedAtRef.current) % TIMING_CYCLE_MS) / TIMING_CYCLE_MS;
-    const position = cycleProgress <= 0.5 ? cycleProgress * 200 : (1 - cycleProgress) * 200;
-    const distanceFromCenter = Math.abs(position - 50);
-    const grade = distanceFromCenter <= 8 ? 'perfect' : distanceFromCenter <= 20 ? 'good' : 'miss';
-
-    timingGradeRef.current = grade;
-    setTimingWindow({ active: false, grade, position });
-    playSfx(grade === 'perfect' ? 'success' : grade === 'good' ? 'page' : 'wrong');
-    addLog(
-      grade === 'perfect'
-        ? `🎯 PERFECT! 기본 성공률에 +${TIMING_BONUS.perfect}%p가 더해집니다.`
-        : grade === 'good'
-          ? `👍 GOOD! 기본 성공률에 +${TIMING_BONUS.good}%p가 더해집니다.`
-          : '타이밍 보너스 없이 기본 확률로 판정합니다.',
-      grade === 'perfect' ? 'great-success' : grade === 'good' ? 'success' : 'info',
-    );
-
-    return grade;
-  }, [addLog, playSfx, timingWindow.active]);
 
   const triggerFlash = useCallback((type) => {
     setFlashClass(`flash-${type}`);
@@ -105,6 +83,32 @@ export default function useEnhancementSession({ playSfx, addLog }) {
       setParticles(current => current.filter(particle => !newParticles.includes(particle)));
     }, 600);
   }, [playSfx]);
+
+  const handleTimingHit = useCallback(() => {
+    if (!timingWindow.active || !timingStartedAtRef.current) return;
+
+    const cycleProgress = ((Date.now() - timingStartedAtRef.current) % TIMING_CYCLE_MS) / TIMING_CYCLE_MS;
+    const position = cycleProgress <= 0.5 ? cycleProgress * 200 : (1 - cycleProgress) * 200;
+    const distanceFromCenter = Math.abs(position - 50);
+    const grade = distanceFromCenter <= 8 ? 'perfect' : distanceFromCenter <= 20 ? 'good' : 'miss';
+
+    timingGradeRef.current = grade;
+    setTimingWindow({ active: false, grade, position });
+    playSfx(grade === 'perfect' ? 'success' : grade === 'good' ? 'page' : 'wrong');
+    triggerStrike(
+      grade === 'perfect' ? '정확!' : grade === 'good' ? '좋아!' : '빗나감',
+      grade === 'perfect' ? 34 : grade === 'good' ? 22 : 10,
+    );
+    addLog(
+      grade === 'perfect'
+        ? `🎯 PERFECT! 기본 성공률에 +${TIMING_BONUS.perfect}%p가 더해집니다.`
+        : grade === 'good'
+          ? `👍 GOOD! 기본 성공률에 +${TIMING_BONUS.good}%p가 더해집니다.`
+          : '타이밍 보너스 없이 기본 확률로 판정합니다.',
+      grade === 'perfect' ? 'great-success' : grade === 'good' ? 'success' : 'info',
+    );
+  }, [addLog, playSfx, timingWindow.active, triggerStrike]);
+
 
   const scheduleStrike = useCallback((delay, text, particleCount) => {
     setTimeout(() => triggerStrike(text, particleCount), Math.max(0, delay));
