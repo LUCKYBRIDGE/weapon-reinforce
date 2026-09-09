@@ -4,7 +4,10 @@ import {
   CURIOSITY_RARITIES,
   getCuriosityMetrics,
   getCuriositySaleImpact,
+  getMaxRestorableTier,
+  GREAT_SUCCESS_RATES,
   RESTORE_SHOP_PRICES,
+  rollGreatSuccessStepCount,
   TIMELINE_PATH,
   TIMELINE_UPGRADE_RATES,
   TIMING_BONUS,
@@ -58,9 +61,6 @@ const WEAPON_TREE = {
 const UPGRADE_RATES = TIMELINE_UPGRADE_RATES;
 
 const MAX_WEAPON_TIER = 7;
-const GREAT_SUCCESS_DOUBLE_RATE = 3;
-const GREAT_SUCCESS_TRIPLE_RATE = 1;
-const GREAT_SUCCESS_FALSE_ALARM_RATE = 4;
 const TEST_ENHANCEMENT_SCENARIOS = [
   { id: 'success-v1', label: '+1강화v1', requiredSteps: 1 },
   { id: 'success-v2', label: '+1강화v2', requiredSteps: 1 },
@@ -125,20 +125,6 @@ const getWeaponNameByState = (targetTier, targetPath) => {
 const getWeaponImageFileName = (targetTier, targetPath) => {
   const weaponState = normalizeWeaponState(targetTier, targetPath);
   return WEAPON_TIMELINE[weaponState.tier]?.image || WEAPON_TIMELINE[1].image;
-};
-
-const getGreatSuccessStepCount = (currentTier) => {
-  const maxSteps = Math.min(3, MAX_WEAPON_TIER - currentTier);
-  if (maxSteps <= 1) return 1;
-
-  const roll = Math.random() * 100;
-  if (maxSteps >= 3) {
-    if (roll < GREAT_SUCCESS_TRIPLE_RATE) return 3;
-    if (roll < GREAT_SUCCESS_TRIPLE_RATE + GREAT_SUCCESS_DOUBLE_RATE) return 2;
-    return 1;
-  }
-  if (roll < GREAT_SUCCESS_DOUBLE_RATE) return 2;
-  return 1;
 };
 
 const getRandomDelay = (base, variance) => base + Math.floor(Math.random() * variance);
@@ -811,10 +797,7 @@ function App() {
     ownedTotal: ownedCuriosityTotal,
   } = titleMetrics;
   const activeTitles = TITLE_DEFINITIONS.filter(title => title.check(titleMetrics));
-  const maxRestorableTier = Math.min(
-    Math.max(1, maxTierEver - 2),
-    Math.max(...Object.keys(RESTORE_SHOP_PRICES).map(Number))
-  );
+  const maxRestorableTier = getMaxRestorableTier(maxTierEver);
 
   const getTestEnhancementLockReason = (scenario) => {
     if (remainingUpgradeSteps <= 0) {
@@ -1203,9 +1186,9 @@ function App() {
         addLog(`✨ 강화 성공! 무기의 결이 단단해졌습니다.`, 'success');
 
         setTimeout(() => {
-          const totalSteps = getGreatSuccessStepCount(tier);
+          const totalSteps = rollGreatSuccessStepCount(tier);
           const finalTargetTier = Math.min(MAX_WEAPON_TIER, tier + totalSteps);
-          const shouldFalseAlarm = totalSteps === 1 && firstTier < MAX_WEAPON_TIER && Math.random() * 100 < GREAT_SUCCESS_FALSE_ALARM_RATE;
+          const shouldFalseAlarm = totalSteps === 1 && firstTier < MAX_WEAPON_TIER && Math.random() * 100 < GREAT_SUCCESS_RATES.falseAlarm;
 
           if (finalTargetTier > firstTier) {
             continueGreatSuccessUpgrade(firstTier, finalTargetTier, finalPath, 1, finalTargetTier - firstTier);

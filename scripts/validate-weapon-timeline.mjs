@@ -7,8 +7,12 @@ import {
   CURIOSITY_RARITIES,
   getCuriosityMetrics,
   getCuriositySaleImpact,
+  getMaxRestorableTier,
+  GREAT_SUCCESS_RATES,
   RESTORE_SHOP_PRICES,
+  rollGreatSuccessStepCount,
   TIMELINE_UPGRADE_RATES,
+  TIMING_GRADE_THRESHOLDS,
   TITLE_DEFINITIONS,
   WEAPON_TIMELINE,
 } from '../src/data/weaponTimeline.js';
@@ -93,6 +97,29 @@ const duplicateSale = getCuriositySaleImpact({
 }, 'grandmothers-kindling', 2);
 assert(!duplicateSale.deactivatedTitles.some(title => title.id === 'grandmothers-firekeeper'), '한 개를 남기는 중복 판매가 보유 칭호를 잘못 비활성화합니다.');
 assert(duplicateSale.nextInventory['grandmothers-kindling'] === 1, '중복 괴작 판매 뒤 한 개가 남지 않았습니다.');
+
+assert(
+  GREAT_SUCCESS_RATES.double === 3
+  && GREAT_SUCCESS_RATES.triple === 1
+  && GREAT_SUCCESS_RATES.falseAlarm === 4,
+  '대성공 확률 계약(+2 3% / +3 1% / 가짜 대강화 4%)이 바뀌었습니다.',
+);
+assert(
+  TIMING_GRADE_THRESHOLDS.perfectDistance === 8
+  && TIMING_GRADE_THRESHOLDS.goodDistance === 20,
+  '강화 타이밍 판정 폭(PERFECT ±8 / GOOD ±20)이 바뀌었습니다.',
+);
+assert(rollGreatSuccessStepCount(1, () => 0) === 3, '+1에서 +3 대성공 경계가 동작하지 않습니다.');
+assert(rollGreatSuccessStepCount(1, () => 0.02) === 2, '+1에서 +2 대성공 경계가 동작하지 않습니다.');
+assert(rollGreatSuccessStepCount(1, () => 0.5) === 1, '일반 강화 성공이 대성공으로 잘못 판정됩니다.');
+assert(rollGreatSuccessStepCount(5, () => 0) === 2, '+5에서 남은 단계 수에 맞춘 +2 대성공이 동작하지 않습니다.');
+assert(rollGreatSuccessStepCount(6, () => 0) === 1, '+6에서는 최고 단계를 넘는 대성공이 발생하면 안 됩니다.');
+assert(getMaxRestorableTier(1) === 1, '초기 상태에서 복원 단계가 열렸습니다.');
+assert(getMaxRestorableTier(3) === 1, '평생 최고 +3에서 +2 복원이 열리면 안 됩니다.');
+assert(getMaxRestorableTier(4) === 2, '평생 최고 +4에서 +2 복원이 열려야 합니다.');
+assert(getMaxRestorableTier(5) === 3, '평생 최고 +5에서 +3 복원이 열려야 합니다.');
+assert(getMaxRestorableTier(6) === 4, '평생 최고 +6에서 +4 복원이 열려야 합니다.');
+assert(getMaxRestorableTier(7) === 5, '평생 최고 +7에서 +5 복원이 상한이어야 합니다.');
 
 const restoreTiers = Object.keys(RESTORE_SHOP_PRICES).map(Number).sort((a, b) => a - b);
 assert(restoreTiers[0] === 1, '복원 상점에는 기본 K2 단계가 필요합니다.');
