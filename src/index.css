@@ -2114,10 +2114,19 @@ button:disabled {
 .expedition-stage.is-player-strike .expedition-opponent.is-enemy { animation: expeditionEnemyHit 0.42s 0.18s ease-out both; }
 .expedition-stage.is-enemy-strike .expedition-opponent.is-enemy { animation: expeditionEnemyLunge 0.62s ease-in-out both; }
 .expedition-stage.is-enemy-strike .expedition-player { animation: expeditionPlayerHit 0.5s 0.2s ease-out both; }
+.expedition-stage.is-guarded-hit .expedition-player { animation: expeditionGuardedHit 0.5s 0.18s ease-out both; }
+.expedition-stage.is-healing-strike .first-person-weapon img { filter: drop-shadow(0 0 11px rgba(74, 222, 128, 0.95)) brightness(1.08); }
 .expedition-hit-flash { position: absolute; inset: 0; z-index: 20; opacity: 0; pointer-events: none; background: rgba(185, 28, 28, 0.35); }
 .expedition-stage.is-enemy-strike .expedition-hit-flash { animation: expeditionHitFlash 0.55s 0.18s ease-out both; }
+.expedition-stage.is-critical-strike .expedition-hit-flash { background: rgba(250, 204, 21, 0.28); animation: expeditionCriticalFlash 0.48s 0.12s ease-out both; }
 
 .expedition-turn-badge { position: absolute; z-index: 30; top: 25%; left: 50%; transform: translateX(-50%); padding: 0.26rem 0.52rem; border: 2px solid #1f2937; border-radius: 4px; background: #f8fafc; color: #111827; font-size: 0.64rem; font-weight: 900; box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.5); }
+.expedition-combat-feedback { position: absolute; z-index: 31; top: 33%; left: 50%; display: flex; justify-content: center; flex-wrap: wrap; gap: 0.3rem; width: min(88%, 520px); transform: translateX(-50%); pointer-events: none; }
+.expedition-combat-feedback span { padding: 0.24rem 0.42rem; border: 2px solid #334155; border-radius: 999px; background: rgba(15, 23, 42, 0.92); color: #f8fafc; font-size: 0.62rem; font-weight: 900; box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.42); }
+.expedition-combat-feedback .is-critical { border-color: #f59e0b; color: #fef3c7; }
+.expedition-combat-feedback .is-guarded { border-color: #60a5fa; color: #dbeafe; }
+.expedition-combat-feedback .is-healed { border-color: #4ade80; color: #dcfce7; }
+.expedition-combat-feedback .is-attack-bonus { border-color: #a78bfa; color: #ede9fe; }
 .expedition-dialogue { position: absolute; z-index: 32; right: 2.5%; bottom: 2.5%; left: 2.5%; min-height: 20%; padding: 0.55rem 0.7rem; border: 4px double #334155; border-radius: 4px; background: rgba(248, 250, 252, 0.96); color: #111827; box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.52); }
 .expedition-dialogue strong { display: block; margin-bottom: 0.18rem; color: #1e3a8a; font-size: 0.7rem; }
 .expedition-dialogue p { margin: 0; font-size: 0.8rem; font-weight: 800; line-height: 1.45; }
@@ -2178,7 +2187,9 @@ button:disabled {
 @keyframes expeditionEnemyHit { 0%, 100% { filter: brightness(1); transform: translateX(0); } 35% { filter: brightness(2.2); transform: translateX(10%) rotate(4deg); } 65% { transform: translateX(-6%) rotate(-3deg); } }
 @keyframes expeditionEnemyLunge { 0%, 100% { transform: translate(0, 0) scale(1); } 48% { transform: translate(-42%, 28%) scale(1.34); } }
 @keyframes expeditionPlayerHit { 0%, 100% { transform: translateX(0); filter: brightness(1); } 35% { transform: translateX(-8%) rotate(-4deg); filter: brightness(1.8); } }
+@keyframes expeditionGuardedHit { 0%, 100% { transform: translateX(0); filter: brightness(1); } 35% { transform: translateX(-3%) rotate(-1deg); filter: brightness(1.28); } }
 @keyframes expeditionHitFlash { 0%, 100% { opacity: 0; } 32% { opacity: 0.86; } }
+@keyframes expeditionCriticalFlash { 0%, 100% { opacity: 0; } 28% { opacity: 0.72; } }
 @keyframes expeditionPortalSpin { to { transform: rotate(360deg); } }
 
 /* Local save manager */
@@ -2742,6 +2753,8 @@ button:disabled {
   .expedition-opponent { right: 3%; width: 34%; }
   .expedition-player-status,
   .expedition-enemy-status { width: 45%; }
+  .expedition-combat-feedback { top: 34%; width: 94%; gap: 0.2rem; }
+  .expedition-combat-feedback span { padding: 0.2rem 0.32rem; font-size: 0.55rem; }
   .expedition-dialogue { min-height: 23%; padding: 0.42rem 0.5rem; }
   .expedition-dialogue p { font-size: 0.68rem; }
   .expedition-turn-badge { top: 28%; font-size: 0.56rem; }
@@ -2757,6 +2770,7 @@ button:disabled {
   .expedition-opponent,
   .expedition-player,
   .expedition-hit-flash,
+  .expedition-combat-feedback,
   .curiosity-drop-card,
   .curiosity-drop-card::before { animation: none; }
 
