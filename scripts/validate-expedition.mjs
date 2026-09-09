@@ -70,6 +70,37 @@ for (const support of [...EXPEDITION_NPCS, ...EXPEDITION_EVENTS]) {
   }
 }
 
+const choiceNpcs = EXPEDITION_NPCS.filter(npc => Array.isArray(npc.choices) && npc.choices.length > 0);
+const choiceEvents = EXPEDITION_EVENTS.filter(event => Array.isArray(event.choices) && event.choices.length > 0);
+assert(choiceNpcs.length >= 2, '1.2-02 선택형 NPC는 최소 2종이어야 합니다.');
+assert(choiceEvents.length >= 2, '1.2-02 선택형 사건은 최소 2종이어야 합니다.');
+
+for (const support of [...choiceNpcs, ...choiceEvents]) {
+  assert(support.choicePrompt, `${support.id}의 선택 안내 문구가 없습니다.`);
+  assert.equal(support.choices.length, 2, `${support.id}의 선택지는 정확히 2개여야 합니다.`);
+  assert.equal(new Set(support.choices.map(choice => choice.id)).size, 2, `${support.id}의 선택지 ID가 중복됩니다.`);
+
+  const choiceSignatures = new Set();
+  for (const choice of support.choices) {
+    assert(choice.id && choice.label && choice.description && choice.result, `${support.id} 선택지 설명이 불완전합니다.`);
+    assert(Array.isArray(choice.effects), `${support.id}/${choice.id} 효과 배열이 없습니다.`);
+    assert(
+      choice.effects.length > 0 || Number(choice.bonusLootRolls) > 0,
+      `${support.id}/${choice.id} 선택 결과가 비어 있습니다.`,
+    );
+    assert(Number(choice.bonusLootRolls || 0) >= 0 && Number(choice.bonusLootRolls || 0) <= 2, `${support.id}/${choice.id} 추가 조사 횟수가 범위를 벗어났습니다.`);
+    for (const effect of choice.effects) {
+      assert(['heal', 'nextAttackBonus', 'nextGuardBonus', 'lootBonus'].includes(effect.kind), `${support.id}/${choice.id} 효과 종류가 잘못되었습니다.`);
+      assert(effect.amount > 0, `${support.id}/${choice.id} 효과 수치가 양수가 아닙니다.`);
+    }
+    choiceSignatures.add([
+      ...choice.effects.map(effect => `${effect.kind}:${effect.amount}`).sort(),
+      `bonusLoot:${Number(choice.bonusLootRolls || 0)}`,
+    ].join('|'));
+  }
+  assert.equal(choiceSignatures.size, 2, `${support.id}의 두 선택 결과가 실질적으로 같습니다.`);
+}
+
 const effectSignature = support => support.effects
   .map(effect => `${effect.kind}:${effect.amount}`)
   .sort()
@@ -292,6 +323,80 @@ const newRoadEventSelection = selectExpeditionEncounter({
 });
 assert.equal(newRoadEventSelection.encounter.id, 'rain-washed-waystation-chest', '1.2 신규 길목 사건을 선택할 수 없습니다.');
 
+const choiceNpcBase = {
+  ...run,
+  phase: 'npc-intro',
+  depth: 2,
+  playerHp: run.playerMaxHp - 30,
+  encounter: newRoadNpcSelection.encounter,
+  enemyHp: 0,
+  enemyMaxHp: 0,
+  lastDrop: {},
+};
+const awaitingNpcChoice = resolveNpcEncounter(choiceNpcBase);
+assert.equal(awaitingNpcChoice.phase, 'npc-choice', '선택형 NPC가 선택 대기 상태에서 멈추지 않습니다.');
+assert.equal(awaitingNpcChoice.npcsMet, choiceNpcBase.npcsMet, '선택 전 NPC 조우 횟수가 증가했습니다.');
+assert.equal(awaitingNpcChoice.pendingRenown, choiceNpcBase.pendingRenown, '선택 전 명성이 지급되었습니다.');
+const resumedNpcChoice = sanitizeExpeditionRun(JSON.parse(JSON.stringify(awaitingNpcChoice)));
+assert(resumedNpcChoice, '선택 대기 NPC 진행을 복구하지 못했습니다.');
+assert.equal(resumedNpcChoice.phase, 'npc-choice');
+assert.deepEqual(
+  resumedNpcChoice.encounter.choices.map(choice => choice.id),
+  awaitingNpcChoice.encounter.choices.map(choice => choice.id),
+  '새로고침 복구 뒤 NPC 선택지가 달라졌습니다.',
+);
+assert.deepEqual(
+  resolveNpcEncounter(resumedNpcChoice, 'unknown-choice'),
+  resumedNpcChoice,
+  '알 수 없는 NPC 선택지가 적용되었습니다.',
+);
+const npcRestChoice = resolveNpcEncounter(resumedNpcChoice, 'treat-wounds-first');
+const npcReadyChoice = resolveNpcEncounter(resumedNpcChoice, 'ready-weapon-strap');
+assert.equal(npcRestChoice.phase, 'decision');
+assert.equal(npcRestChoice.playerHp, Math.min(choiceNpcBase.playerMaxHp, choiceNpcBase.playerHp + 24), 'NPC 회복 선택이 적용되지 않았습니다.');
+assert(npcReadyChoice.activeEffects.nextAttackBonus >= 18, 'NPC 전투 준비 선택이 적용되지 않았습니다.');
+assert(npcRestChoice.playerHp > npcReadyChoice.playerHp, 'NPC 두 선택의 결과 차이가 없습니다.');
+assert.equal(npcRestChoice.npcsMet, choiceNpcBase.npcsMet + 1);
+assert.deepEqual(
+  resolveNpcEncounter(npcRestChoice, 'treat-wounds-first'),
+  npcRestChoice,
+  'NPC 선택 결과가 두 번 적용되었습니다.',
+);
+
+const choiceEventBase = {
+  ...run,
+  phase: 'event-intro',
+  depth: 2,
+  playerHp: run.playerMaxHp - 20,
+  encounter: newRoadEventSelection.encounter,
+  enemyHp: 0,
+  enemyMaxHp: 0,
+  lastDrop: {},
+};
+const awaitingEventChoice = resolveEventEncounter(choiceEventBase);
+assert.equal(awaitingEventChoice.phase, 'event-choice', '선택형 사건이 선택 대기 상태에서 멈추지 않습니다.');
+const resumedEventChoice = sanitizeExpeditionRun(JSON.parse(JSON.stringify(awaitingEventChoice)));
+assert(resumedEventChoice, '선택 대기 사건 진행을 복구하지 못했습니다.');
+assert.equal(resumedEventChoice.phase, 'event-choice');
+assert.deepEqual(
+  resumedEventChoice.encounter.choices.map(choice => choice.id),
+  awaitingEventChoice.encounter.choices.map(choice => choice.id),
+  '새로고침 복구 뒤 사건 선택지가 달라졌습니다.',
+);
+const lootBeforeChoice = sumLoot(resumedEventChoice.pendingLoot);
+const eventLootChoice = resolveEventEncounter(resumedEventChoice, 'search-inner-compartment');
+assert.equal(eventLootChoice.phase, 'decision');
+assert.equal(eventLootChoice.eventsFound, choiceEventBase.eventsFound + 1);
+assert(
+  sumLoot(eventLootChoice.pendingLoot) - lootBeforeChoice >= 2,
+  '사건 추가 조사 선택의 현장 전리품 1회 보너스가 적용되지 않았습니다.',
+);
+assert.deepEqual(
+  resolveEventEncounter(eventLootChoice, 'search-inner-compartment'),
+  eventLootChoice,
+  '사건 선택 결과가 두 번 적용되었습니다.',
+);
+
 const npcSelection = selectExpeditionEncounter({
   depth: 2,
   rngState: 1,
@@ -421,5 +526,5 @@ assert.equal(sanitized.renown, 35);
 assert.deepEqual(sanitized.seenHistoryCardIds, [EXPEDITION_HISTORY_LAYERS[0].id]);
 
 console.log(
-  `연속 탐사 1.2-01 검증 통과 · 유형 우선 조우 60/23/17 · 지역 ${EXPEDITION_REGIONS.length} · 적 ${EXPEDITION_ENEMIES.length} · NPC ${EXPEDITION_NPCS.length} · 사건 ${EXPEDITION_EVENTS.length} · 역사층 ${EXPEDITION_HISTORY_LAYERS.length} · 시드 200개 다양성 검증`,
+  `연속 탐사 1.2-02 검증 통과 · 유형 우선 조우 60/23/17 · 지역 ${EXPEDITION_REGIONS.length} · 적 ${EXPEDITION_ENEMIES.length} · NPC ${EXPEDITION_NPCS.length} · 사건 ${EXPEDITION_EVENTS.length} · 선택형 NPC ${choiceNpcs.length} · 선택형 사건 ${choiceEvents.length} · 저장/복구 선택 검증`,
 );
