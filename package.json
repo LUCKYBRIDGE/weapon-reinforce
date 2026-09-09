@@ -1,7 +1,7 @@
 {
   "name": "weapon-reinforce",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "packageManager": "npm@10.9.2",
   "engines": {
     "node": ">=22 <23"
@@ -21,7 +21,8 @@
     "validate:economy": "node scripts/validate-expedition-economy.mjs",
     "validate:balance": "node scripts/simulate-game-balance.mjs",
     "validate:runtime": "node scripts/validate-runtime-assets.mjs",
-    "validate:all": "npm run validate:weapons && npm run validate:quizzes && npm run validate:saves && npm run validate:save-file && npm run validate:economy && npm run validate:expedition && npm run validate:balance && npm run lint && npm run build && npm run validate:runtime",
+    "validate:release": "node scripts/validate-release-readiness.mjs",
+    "validate:all": "npm run validate:weapons && npm run validate:quizzes && npm run validate:saves && npm run validate:save-file && npm run validate:economy && npm run validate:expedition && npm run validate:balance && npm run validate:release && npm run lint && npm run build && npm run validate:runtime",
     "preview": "vite preview"
   },
   "dependencies": {
