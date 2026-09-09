@@ -110,6 +110,7 @@
 
 - `src/hooks/useQuizSession.js`: 문제팩 선택·로딩, 세션/누적 통계, 오답 대기 타이머, 퀴즈 통계 저장
 - `src/hooks/useEnhancementSession.js`: 강화 연출 상태, 타이밍 입력·판정, 타격/입자/플래시 효과
+- `src/hooks/useExpeditionSession.js`: 탐사 run/stats/economy, 자동 진행, 귀환·패배 정산, settled 복구, 준비물 거래·장착
 
 ### 데이터·상태 로직
 
@@ -207,6 +208,14 @@ PR 검증 워크플로와 GitHub Pages 배포 워크플로 모두 `npm run valid
 - `App.jsx`에는 강화 비용 차감, 실제 성공률 계산, 무기 단계 변경, 실패 복귀, 대성공 추가 강화 등 게임 규칙 orchestration을 유지했다.
 - 따라서 강화 규칙과 확률을 바꾸지 않고 강화 세션의 UI·입력 책임만 분리했다.
 
+## 2026-09-09 P1 구조 개선 3차
+
+- 탐사 run, 속도, 누적 통계, 전리품·준비물 경제 상태를 `src/hooks/useExpeditionSession.js`로 분리했다.
+- 탐사 시작, 다음 층 진행, 자동 전투/조우 진행, 안전 귀환, 패배 정산, 정산 ID 중복 방지, settled 체크포인트 복구를 훅으로 이동했다.
+- 준비물 제작·장착과 기록 카드 해금도 탐사 도메인 경계에 포함했다.
+- 기존 `weaponActiveExpeditionV1`, `weaponExpeditionStatsV1`, `weaponExpeditionEconomyV1` 저장 key와 저장 시점, 패배 시 엽전 보정 및 중복 정산 방지 규칙은 유지했다.
+- `App.jsx`에는 현재 무기·엽전·강화 상태와 탐사 훅을 연결하고 모달에 결과를 전달하는 역할만 남겼다.
+
 ## 다음 개발 우선순위
 
 ### P0 — 1.1 기준선 보존
@@ -222,7 +231,7 @@ PR 검증 워크플로와 GitHub Pages 배포 워크플로 모두 `npm run valid
 
 - [x] 퀴즈 세션
 - [x] 강화 세션 상태·입력
-- [ ] 탐사 상태·정산
+- [x] 탐사 상태·정산
 - [ ] 저장 실패 및 백업 경계
 
 분리는 기존 데이터 API와 검증 스크립트를 유지하는 범위에서 진행한다.
