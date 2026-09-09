@@ -271,7 +271,7 @@ export const EXPEDITION_ENEMIES = Object.freeze([
     traitDescription: '높은 방어와 격턴 공명 공격을 지닌 최종 잔영이다.',
     combat: {
       armor: 3,
-      hpPercent: 135,
+      hpPercent: 120,
       attackPercent: 110,
       powerEvery: 2,
       powerPercent: 150,

@@ -145,16 +145,38 @@ const supplyScenarios = [
   { id: 'none', name: '준비물 없음', supply: null },
   ...EXPEDITION_SUPPLIES.map(supply => ({ id: supply.id, name: supply.name, supply })),
 ];
-for (const [index, scenario] of supplyScenarios.entries()) {
+const supplyResults = new Map();
+for (const scenario of supplyScenarios) {
   const result = simulateExpeditionCompletion({
     tier: 7,
     supply: scenario.supply,
-    seed: 20261200 + index,
+    seed: 20261200,
   });
+  supplyResults.set(scenario.id, result);
   console.log(
     `${scenario.name}: 최심부 생존 ${(result.completionRate * 100).toFixed(1)}% · 사망 ${(result.deathRate * 100).toFixed(1)}% · 평균 깊이 ${result.averageDepth.toFixed(2)}`,
   );
 }
+
+const noSupplyResult = supplyResults.get('none');
+const bandageResult = supplyResults.get('travel-bandage');
+const clothResult = supplyResults.get('maintenance-cloth');
+const pouchResult = supplyResults.get('safe-pouch');
+assert(results[5].completionRate <= 0.05, `+6 최심부 생존률이 ${(results[5].completionRate * 100).toFixed(1)}%로 5%를 넘습니다.`);
+assert(
+  noSupplyResult.completionRate >= 0.20 && noSupplyResult.completionRate <= 0.30,
+  `+7 무준비 최심부 생존률이 목표 20~30%를 벗어났습니다: ${(noSupplyResult.completionRate * 100).toFixed(1)}%`,
+);
+for (const [name, result] of [['여행 붕대', bandageResult], ['공명 손질 천', clothResult]]) {
+  assert(
+    result.completionRate >= 0.30 && result.completionRate <= 0.45,
+    `+7 ${name} 최심부 생존률이 목표 30~45%를 벗어났습니다: ${(result.completionRate * 100).toFixed(1)}%`,
+  );
+}
+assert(
+  pouchResult.completionRate === noSupplyResult.completionRate,
+  '전투 능력이 없는 균열 안전 주머니가 동일 시드에서 최심부 생존률을 바꿨습니다.',
+);
 
 const simulateReinforcementJourney = (timingBonus, seed) => {
   const random = createSeededRandom(seed);
