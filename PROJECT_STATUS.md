@@ -106,6 +106,10 @@
 - `src/components/HistoryArchiveModal.jsx`
 - `src/components/SaveManagerModal.jsx`
 
+### 훅
+
+- `src/hooks/useQuizSession.js`: 문제팩 선택·로딩, 세션/누적 통계, 오답 대기 타이머, 퀴즈 통계 저장
+
 ### 데이터·상태 로직
 
 - `src/data/weaponTimeline.js`
@@ -188,6 +192,13 @@ PR 검증 워크플로와 GitHub Pages 배포 워크플로 모두 `npm run valid
 - `master` 대상 PR에서 `npm run validate:all`을 자동 실행하는 `.github/workflows/ci.yml`을 추가했다.
 - 이 정리는 런타임 게임 동작·데이터·배포 설정을 변경하지 않는다.
 
+## 2026-09-09 P1 구조 개선 진행
+
+- 퀴즈 세션 상태, 문제팩 로딩, 최근 문항 관리, 오답 5초 대기 타이머, 세션/누적 통계, 퀴즈 통계 localStorage 저장을 `src/hooks/useQuizSession.js`로 분리했다.
+- `App.jsx`에는 정답 보상 엽전 지급, 로그, 플로팅 보상 텍스트 등 다른 게임 상태와 직접 연결되는 orchestration만 남겼다.
+- 퀴즈 데이터 형식, 보상 계산, 저장 key, 문제 선택 규칙, 화면 마크업은 변경하지 않았다.
+- 전체 출시 게이트와 PR CI를 통해 동작 보존 여부를 검증한다.
+
 ## 다음 개발 우선순위
 
 ### P0 — 1.1 기준선 보존
@@ -201,10 +212,10 @@ PR 검증 워크플로와 GitHub Pages 배포 워크플로 모두 `npm run valid
 
 현재 `App.jsx`가 강화, 퀴즈, 저장, 탐사, 괴작, 도감, 음향, 화면 모드와 애니메이션 상태를 함께 관리한다. 기능을 재설계하지 않고 다음 단위부터 점진적으로 분리하는 것이 다음 구조 개선 후보이다.
 
-- 강화 상태·입력
-- 퀴즈 세션
-- 탐사 상태·정산
-- 저장 실패 및 백업 경계
+- [x] 퀴즈 세션
+- [ ] 강화 상태·입력
+- [ ] 탐사 상태·정산
+- [ ] 저장 실패 및 백업 경계
 
 분리는 기존 데이터 API와 검증 스크립트를 유지하는 범위에서 진행한다.
 
