@@ -321,7 +321,27 @@ export const EXPEDITION_NPCS = Object.freeze([
     weight: 23,
     asset: 'event_merchant_escort.png',
     roleLabel: '여행 보급 도우미',
-    traitDescription: '상처를 조금 돌보고 다음 전투의 첫 공격을 돕는다.',
+    traitDescription: '회복을 우선할지 다음 전투 준비를 할지 하나를 고를 수 있다.',
+    choicePrompt: '보급지기가 어느 쪽을 먼저 손볼지 묻는다.',
+    choices: [
+      {
+        id: 'treat-wounds-first',
+        label: '상처를 먼저 돌본다',
+        description: '체력 24 회복',
+        effects: [{ kind: 'heal', amount: 24 }],
+        result: '마른 천과 물로 상처를 충분히 돌봤다.',
+      },
+      {
+        id: 'ready-weapon-strap',
+        label: '무기 끈을 다시 맨다',
+        description: '체력 8 회복 · 다음 공격 +18%',
+        effects: [
+          { kind: 'heal', amount: 8 },
+          { kind: 'nextAttackBonus', amount: 18 },
+        ],
+        result: '상처는 간단히 감고 무기 끈과 자세를 다시 정비했다.',
+      },
+    ],
     effects: [
       { kind: 'heal', amount: 16 },
       { kind: 'nextAttackBonus', amount: 10 },
@@ -363,7 +383,31 @@ export const EXPEDITION_NPCS = Object.freeze([
     weight: 23,
     asset: 'bond_village_teacher.png',
     roleLabel: '훈련 기록 정리',
-    traitDescription: '중간 회복과 함께 다음 공격과 방어를 조금씩 돕는다.',
+    traitDescription: '훈련 기록을 연구할지 장비를 정비할지 하나를 고를 수 있다.',
+    choicePrompt: '기록 서리가 남은 시간에 무엇을 먼저 할지 묻는다.',
+    choices: [
+      {
+        id: 'study-drill-notes',
+        label: '훈련 기록을 살핀다',
+        description: '체력 8 회복 · 다음 공격 +18% · 다음 적 전리품 +1회',
+        effects: [
+          { kind: 'heal', amount: 8 },
+          { kind: 'nextAttackBonus', amount: 18 },
+          { kind: 'lootBonus', amount: 1 },
+        ],
+        result: '동작 순서를 짚어 보며 다음 전투에서 노릴 지점을 정리했다.',
+      },
+      {
+        id: 'secure-garrison-gear',
+        label: '장비를 다시 묶는다',
+        description: '체력 16 회복 · 다음 방어 +5',
+        effects: [
+          { kind: 'heal', amount: 16 },
+          { kind: 'nextGuardBonus', amount: 5 },
+        ],
+        result: '느슨해진 장비를 고쳐 매고 상처를 정리했다.',
+      },
+    ],
     effects: [
       { kind: 'heal', amount: 20 },
       { kind: 'nextAttackBonus', amount: 15 },
@@ -454,7 +498,28 @@ export const EXPEDITION_EVENTS = Object.freeze([
     weight: 17,
     asset: 'event_old_chest.png',
     roleLabel: '길목 보급 발견',
-    traitDescription: '작은 회복과 다음 공격 보너스를 얻는다.',
+    traitDescription: '마른 물자를 챙길지 상자를 더 조사할지 하나를 고를 수 있다.',
+    choicePrompt: '젖은 상자에서 무엇을 우선 챙길까?',
+    choices: [
+      {
+        id: 'take-dry-cloth',
+        label: '마른 천을 챙긴다',
+        description: '체력 16 회복 · 다음 방어 +2',
+        effects: [
+          { kind: 'heal', amount: 16 },
+          { kind: 'nextGuardBonus', amount: 2 },
+        ],
+        result: '쓸 수 있는 마른 천으로 상처와 장비를 먼저 정리했다.',
+      },
+      {
+        id: 'search-inner-compartment',
+        label: '안쪽 칸을 더 조사한다',
+        description: '체력 4 회복 · 현장 전리품 추가 조사 1회',
+        effects: [{ kind: 'heal', amount: 4 }],
+        bonusLootRolls: 1,
+        result: '젖은 물건을 함부로 꺼내지 않고 안쪽 칸을 조심스럽게 더 살폈다.',
+      },
+    ],
     effects: [
       { kind: 'heal', amount: 12 },
       { kind: 'nextAttackBonus', amount: 10 },
@@ -518,7 +583,30 @@ export const EXPEDITION_EVENTS = Object.freeze([
     weight: 17,
     asset: 'event_forge_shrine.png',
     roleLabel: '발굴층 조사',
-    traitDescription: '회복은 적지만 전리품을 두 번 더 조사한다.',
+    traitDescription: '발굴층 기록을 이어갈지 안전한 발판을 확보할지 하나를 고를 수 있다.',
+    choicePrompt: '표식을 확인한 뒤 다음 행동을 고른다.',
+    choices: [
+      {
+        id: 'record-excavation-layer',
+        label: '흙층 기록을 이어간다',
+        description: '체력 4 회복 · 다음 적 전리품 +2회',
+        effects: [
+          { kind: 'heal', amount: 4 },
+          { kind: 'lootBonus', amount: 2 },
+        ],
+        result: '흙색과 유물 위치를 먼저 기록해 다음 조사 단서를 남겼다.',
+      },
+      {
+        id: 'secure-excavation-footing',
+        label: '안전한 발판을 확보한다',
+        description: '체력 8 회복 · 다음 방어 +6',
+        effects: [
+          { kind: 'heal', amount: 8 },
+          { kind: 'nextGuardBonus', amount: 6 },
+        ],
+        result: '무너질 수 있는 가장자리를 피해 안전한 이동선을 먼저 확보했다.',
+      },
+    ],
     effects: [
       { kind: 'heal', amount: 4 },
       { kind: 'lootBonus', amount: 2 },
