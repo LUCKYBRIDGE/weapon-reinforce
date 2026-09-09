@@ -239,6 +239,29 @@ const sanitizeEffects = effects => {
     .filter(effect => effect.amount > 0);
 };
 
+const sanitizeSupportChoices = choices => {
+  if (!Array.isArray(choices)) return [];
+
+  const seenIds = new Set();
+  return choices
+    .filter(isRecord)
+    .map(choice => ({
+      id: safeText(choice.id, '', 80),
+      label: safeText(choice.label, '', 80),
+      description: safeText(choice.description, '', 160),
+      result: safeText(choice.result, '', 240),
+      effects: sanitizeEffects(choice.effects),
+      bonusLootRolls: safeInteger(choice.bonusLootRolls, 0, 0, 2),
+    }))
+    .filter(choice => {
+      if (!choice.id || !choice.label || seenIds.has(choice.id)) return false;
+      if (choice.effects.length === 0 && choice.bonusLootRolls <= 0) return false;
+      seenIds.add(choice.id);
+      return true;
+    })
+    .slice(0, 2);
+};
+
 const materializeEncounter = (entry, depth) => {
   const safeDepth = safeInteger(depth, 1, 1, EXPEDITION_RULES.maxDepth);
   const region = getExpeditionRegion(safeDepth);
@@ -285,9 +308,14 @@ const materializeEncounter = (entry, depth) => {
   }
 
   const effects = sanitizeEffects(entry.effects);
+  const choices = sanitizeSupportChoices(entry.choices);
   return {
     ...common,
     effects,
+    choices,
+    choicePrompt: choices.length === 2
+      ? safeText(entry.choicePrompt, '어떤 도움을 받을지 하나를 고른다.', 180)
+      : '',
     heal: effects.filter(effect => effect.kind === 'heal').reduce((sum, effect) => sum + effect.amount, 0),
     reward: {
       renown: safeInteger(entry.effect?.renown, 0, 0, 9999),
@@ -609,10 +637,37 @@ export const finishVictoryScene = run => {
   };
 };
 
-const resolveSupportEncounter = (run, expectedType) => {
-  const expectedPhase = `${expectedType}-intro`;
-  if (!run || run.settled || run.phase !== expectedPhase || run.encounter?.type !== expectedType) return run;
-  const effects = sanitizeEffects(run.encounter.effects);
+const resolveSupportEncounter = (run, expectedType, choiceId = '') => {
+  const introPhase = `${expectedType}-intro`;
+  const choicePhase = `${expectedType}-choice`;
+  if (!run || run.settled || run.encounter?.type !== expectedType) return run;
+
+  const choices = sanitizeSupportChoices(run.encounter.choices);
+  const hasChoices = choices.length === 2;
+  const selectedChoice = hasChoices
+    ? choices.find(choice => choice.id === safeText(choiceId, '', 80)) || null
+    : null;
+
+  if (hasChoices) {
+    if (run.phase === introPhase && !selectedChoice) {
+      return {
+        ...run,
+        phase: choicePhase,
+        step: run.step + 1,
+        lastAction: createLastAction({
+          id: run.step + 1,
+          actor: expectedType,
+          text: run.encounter.choicePrompt,
+        }),
+      };
+    }
+    if (run.phase === choicePhase && !selectedChoice) return run;
+    if (![introPhase, choicePhase].includes(run.phase)) return run;
+  } else if (run.phase !== introPhase) {
+    return run;
+  }
+
+  const effects = selectedChoice?.effects || sanitizeEffects(run.encounter.effects);
   const healAmount = effects
     .filter(effect => effect.kind === 'heal')
     .reduce((sum, effect) => sum + effect.amount, 0);
@@ -623,17 +678,23 @@ const resolveSupportEncounter = (run, expectedType) => {
     const max = effect.kind === 'lootBonus' ? 3 : 99;
     activeEffects[effect.kind] = clamp((activeEffects[effect.kind] || 0) + effect.amount, 0, max);
   }
+  const bonusLootRolls = selectedChoice?.bonusLootRolls || 0;
   const lootResult = rollExpeditionLoot({
     tableId: run.encounter.lootTableId,
     rngState: run.rngState,
+    bonusRolls: bonusLootRolls,
     random: undefined,
   });
   const effectLabels = [
+    selectedChoice ? `선택: ${selectedChoice.label}` : '',
     healed ? `체력 ${healed} 회복` : '',
     effects.some(effect => effect.kind === 'nextAttackBonus') ? `다음 공격 +${activeEffects.nextAttackBonus}%` : '',
     effects.some(effect => effect.kind === 'nextGuardBonus') ? `다음 방어 +${activeEffects.nextGuardBonus}` : '',
     effects.some(effect => effect.kind === 'lootBonus') ? `다음 전리품 +${activeEffects.lootBonus}회` : '',
+    bonusLootRolls ? `현장 전리품 추가 조사 ${bonusLootRolls}회` : '',
   ].filter(Boolean).join(' · ');
+  const resultText = selectedChoice?.result || run.encounter.result;
+
   return {
     ...run,
     phase: 'decision',
@@ -651,13 +712,13 @@ const resolveSupportEncounter = (run, expectedType) => {
     lastAction: createLastAction({
       id: run.step + 1,
       actor: expectedType,
-      text: `${run.encounter.result} ${effectLabels || '도움 효과 없음'} · 전리품 ${countLoot(lootResult.loot)}개`,
+      text: `${resultText} ${effectLabels || '도움 효과 없음'} · 전리품 ${countLoot(lootResult.loot)}개`,
     }),
   };
 };
 
-export const resolveNpcEncounter = run => resolveSupportEncounter(run, 'npc');
-export const resolveEventEncounter = run => resolveSupportEncounter(run, 'event');
+export const resolveNpcEncounter = (run, choiceId) => resolveSupportEncounter(run, 'npc', choiceId);
+export const resolveEventEncounter = (run, choiceId) => resolveSupportEncounter(run, 'event', choiceId);
 
 export const continueExpedition = run => {
   if (!run || run.settled || run.phase !== 'decision' || run.depth >= EXPEDITION_RULES.maxDepth) return run;
@@ -885,6 +946,7 @@ export const sanitizeExpeditionRun = value => {
     'decision', 'defeat', 'returned', 'defeated',
   ]);
   const supportPhases = new Set([`${encounter.type}-intro`, 'decision', 'returned', 'defeated']);
+  if (encounter.choices?.length === 2) supportPhases.add(`${encounter.type}-choice`);
   const allowedPhases = encounter.type === 'enemy' ? enemyPhases : supportPhases;
   if (!allowedPhases.has(source.phase)) return null;
   const phase = source.phase;

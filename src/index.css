@@ -2132,21 +2132,35 @@ button:disabled {
 .expedition-loot strong { color: #fde68a; }
 .expedition-loot small { margin-left: auto; color: #94a3b8; }
 .expedition-decision,
+.expedition-support-choice,
 .expedition-settlement { display: grid; gap: 0.65rem; padding: 0.75rem; border: 2px solid #334155; border-radius: 6px; background: #111827; }
+.expedition-support-choice { border-color: #1d4ed8; background: linear-gradient(180deg, #172554, #111827); }
 .expedition-decision h3,
 .expedition-decision p,
+.expedition-support-choice h3,
+.expedition-support-choice p,
 .expedition-settlement h3,
 .expedition-settlement p { margin: 0; }
 .expedition-decision > div:first-child > span,
+.expedition-support-choice > div:first-child > span,
 .expedition-settlement > span { color: #93c5fd; font-size: 0.68rem; font-weight: 900; }
 .expedition-decision h3,
+.expedition-support-choice h3,
 .expedition-settlement h3 { color: #f8fafc; font-size: 1rem; }
 .expedition-decision p,
+.expedition-support-choice p,
 .expedition-settlement p,
 .expedition-settlement small { color: #cbd5e1; font-size: 0.75rem; line-height: 1.5; }
-.expedition-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
-.expedition-actions button { display: grid; gap: 0.15rem; min-height: 58px; border: 2px solid #475569; border-radius: 5px; }
-.expedition-actions button small { color: inherit; opacity: 0.74; font-size: 0.65rem; }
+.expedition-actions,
+.expedition-choice-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.expedition-actions button,
+.expedition-choice-actions button { display: grid; gap: 0.15rem; min-height: 58px; border: 2px solid #475569; border-radius: 5px; }
+.expedition-actions button small,
+.expedition-choice-actions button small { color: inherit; opacity: 0.78; font-size: 0.65rem; line-height: 1.4; }
+.expedition-choice-actions button { padding: 0.7rem; border-color: #3b82f6; background: linear-gradient(#1e3a8a, #1e40af); text-align: left; }
+.expedition-choice-actions button:hover,
+.expedition-choice-actions button:focus-visible { border-color: #93c5fd; background: linear-gradient(#1d4ed8, #1e40af); }
+.expedition-choice-actions button strong { color: #f8fafc; font-size: 0.82rem; }
 .expedition-return-btn { background: linear-gradient(#166534, #14532d); }
 .expedition-continue-btn { background: linear-gradient(#b45309, #92400e); }
 .expedition-settlement > button { min-height: 48px; }
@@ -2734,7 +2748,8 @@ button:disabled {
   .expedition-loot { align-items: flex-start; flex-wrap: wrap; }
   .expedition-loot small { width: 100%; margin-left: 0; }
   .expedition-history-glimpse { align-items: flex-start; flex-direction: column; }
-  .expedition-actions { grid-template-columns: 1fr; }
+  .expedition-actions,
+  .expedition-choice-actions { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

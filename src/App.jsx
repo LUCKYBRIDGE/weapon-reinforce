@@ -734,6 +734,7 @@ function App() {
     handleUnlockHistoryCard,
     openExpedition,
     handleContinueExpedition,
+    handleSupportChoice,
     handleReturnExpedition,
     handleCloseExpedition,
     handleBuyExpeditionSupply,
@@ -2305,7 +2306,7 @@ function App() {
             weaponName,
             gold,
             activeExpeditionLabel: expedition
-              ? `${expedition.depth}층 · ${expedition.phase === 'decision' ? '선택 대기' : '진행 중'}`
+              ? `${expedition.depth}층 · ${['decision', 'npc-choice', 'event-choice'].includes(expedition.phase) ? '선택 대기' : '진행 중'}`
               : '대장간에서 안전하게 저장됨',
           }}
           onExport={handleExportGameSave}
@@ -2326,6 +2327,7 @@ function App() {
         onToggleSpeed={toggleExpeditionSpeed}
         onReturn={handleReturnExpedition}
         onContinue={handleContinueExpedition}
+        onChooseSupport={handleSupportChoice}
         onSaveCheckpoint={handleExportGameSave}
         onClose={handleCloseExpedition}
       />

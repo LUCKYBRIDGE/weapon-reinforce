@@ -30,6 +30,15 @@ const createSeededRandom = (seed) => {
   };
 };
 
+const resolveNpcForSimulation = expedition => resolveNpcEncounter(
+  expedition,
+  expedition.encounter?.choices?.[0]?.id,
+);
+const resolveEventForSimulation = expedition => resolveEventEncounter(
+  expedition,
+  expedition.encounter?.choices?.[0]?.id,
+);
+
 const results = [];
 for (let tier = 1; tier <= 7; tier += 1) {
   const random = createSeededRandom(20260710 + tier);
@@ -52,8 +61,8 @@ for (let tier = 1; tier <= 7; tier += 1) {
         expedition = advanceExpeditionCombat(expedition, random);
         if (expedition.lastAction.actor === 'player' || expedition.lastAction.actor === 'enemy') turns += 1;
       } else if (expedition.phase === 'victory') expedition = finishVictoryScene(expedition);
-      else if (expedition.phase === 'npc-intro') expedition = resolveNpcEncounter(expedition);
-      else if (expedition.phase === 'event-intro') expedition = resolveEventEncounter(expedition);
+      else if (expedition.phase === 'npc-intro') expedition = resolveNpcForSimulation(expedition);
+      else if (expedition.phase === 'event-intro') expedition = resolveEventForSimulation(expedition);
       else if (expedition.phase === 'decision') expedition = continueExpedition(expedition);
       else break;
       assert(turns < 100, `+${tier} 탐사가 100턴 안에 끝나지 않습니다.`);
@@ -109,8 +118,8 @@ const simulateExpeditionCompletion = ({ tier, supply, seed }) => {
         expedition = advanceExpeditionCombat(expedition, random);
         if (expedition.lastAction.actor === 'player' || expedition.lastAction.actor === 'enemy') turns += 1;
       } else if (expedition.phase === 'victory') expedition = finishVictoryScene(expedition);
-      else if (expedition.phase === 'npc-intro') expedition = resolveNpcEncounter(expedition);
-      else if (expedition.phase === 'event-intro') expedition = resolveEventEncounter(expedition);
+      else if (expedition.phase === 'npc-intro') expedition = resolveNpcForSimulation(expedition);
+      else if (expedition.phase === 'event-intro') expedition = resolveEventForSimulation(expedition);
       else if (expedition.phase === 'decision') expedition = continueExpedition(expedition);
       else break;
 

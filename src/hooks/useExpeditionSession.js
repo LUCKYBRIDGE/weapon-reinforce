@@ -153,6 +153,23 @@ export default function useExpeditionSession({
     playSfx('page');
   }, [expedition, onStorageFailure, playSfx]);
 
+  const handleSupportChoice = useCallback((choiceId) => {
+    if (!expedition || !['npc-choice', 'event-choice'].includes(expedition.phase)) return;
+
+    const choice = expedition.encounter.choices?.find(candidate => candidate.id === choiceId);
+    if (!choice) return;
+
+    const next = expedition.encounter.type === 'npc'
+      ? resolveNpcEncounter(expedition, choiceId)
+      : resolveEventEncounter(expedition, choiceId);
+    if (next === expedition) return;
+
+    persistActiveExpedition(next, onStorageFailure);
+    setExpedition(next);
+    playSfx('success');
+    addLog(`🧭 [${expedition.encounter.name}] ${choice.label} 선택을 적용했습니다.`, 'success');
+  }, [addLog, expedition, onStorageFailure, playSfx]);
+
   const handleReturnExpedition = useCallback(() => {
     if (!expedition || expedition.phase !== 'decision') return;
 
@@ -430,6 +447,7 @@ export default function useExpeditionSession({
     handleUnlockHistoryCard,
     openExpedition,
     handleContinueExpedition,
+    handleSupportChoice,
     handleReturnExpedition,
     handleCloseExpedition,
     handleBuyExpeditionSupply,
