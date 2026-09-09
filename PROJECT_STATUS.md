@@ -119,6 +119,7 @@
 ### 배포·검증
 
 - `.github/workflows/deploy.yml`
+- `.github/workflows/ci.yml`
 - `scripts/prepare-runtime-public.mjs`
 - `scripts/validate-weapon-timeline.mjs`
 - `scripts/validate-quiz-catalog.mjs`
@@ -150,7 +151,7 @@ npm run validate:all
 9. `build`
 10. `validate:runtime`
 
-GitHub Pages 배포 워크플로도 `npm run validate:all`이 성공해야 배포하도록 구성되어 있다.
+PR 검증 워크플로와 GitHub Pages 배포 워크플로 모두 `npm run validate:all`을 게이트로 사용한다.
 
 ## 1.1 릴리스 검증 상태
 
@@ -184,6 +185,7 @@ GitHub Pages 배포 워크플로도 `npm run validate:all`이 성공해야 배�
 - 기존 `PROJECT_STATUS.md` 전체 내용은 `docs/history/project-status-legacy-through-2026-07-12.md`에 보존했다.
 - 현재 문서는 README, AGENTS, CHECKLIST, package.json, 실제 `src/` 트리와 일치하도록 다시 작성했다.
 - 소스 전체에서 참조되지 않는 Vite 기본 잔여 asset `src/assets/react.svg`, `src/assets/vite.svg`를 제거했다.
+- `master` 대상 PR에서 `npm run validate:all`을 자동 실행하는 `.github/workflows/ci.yml`을 추가했다.
 - 이 정리는 런타임 게임 동작·데이터·배포 설정을 변경하지 않는다.
 
 ## 다음 개발 우선순위
@@ -221,7 +223,7 @@ GitHub Pages 배포 워크플로도 `npm run validate:all`이 성공해야 배�
 ## 릴리스 원칙
 
 - `master` 직접 기능 개발보다 작업 브랜치와 PR을 우선한다.
-- 배포 전 `npm run validate:all`을 통과한다.
+- PR 단계에서 자동 `validate:all`을 통과하고, 배포 전에도 동일 게이트를 통과한다.
 - 기능·UI 변경 시 영향을 받은 데스크톱/태블릿/모바일 흐름을 다시 확인한다.
 - `PROJECT_STATUS.md`에는 현재 상태만 남기고, 장기 개발 이력은 `docs/history/`로 이동한다.
 - 라이선스 선택은 별도 정책 결정 사항이므로 임의로 추가하지 않는다.
