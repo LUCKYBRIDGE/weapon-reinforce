@@ -61,6 +61,7 @@ import ExpeditionWorkshopModal from './components/ExpeditionWorkshopModal.jsx';
 import HistoryArchiveModal from './components/HistoryArchiveModal.jsx';
 import SaveManagerModal from './components/SaveManagerModal.jsx';
 import useQuizSession from './hooks/useQuizSession.js';
+import useEnhancementSession from './hooks/useEnhancementSession.js';
 
 const SHOW_DEV_TOOLS = import.meta.env.DEV
   && typeof window !== 'undefined'
@@ -524,21 +525,8 @@ function App() {
   const [pendingCuriositySale, setPendingCuriositySale] = useState(null);
   const [storageSaveFailure, setStorageSaveFailure] = useState(null);
 
-  // Animation states
+  // Cross-system overlay animation state
   const [floatingTexts, setFloatingTexts] = useState([]);
-  const [isEnhancing, setIsEnhancing] = useState(false);
-  const [enhancementPhase, setEnhancementPhase] = useState('idle'); // 'idle' | 'hammering' | 'judging'
-  const [isStriking, setIsStriking] = useState(false);
-  const [particles, setParticles] = useState([]);
-  const [strikeTexts, setStrikeTexts] = useState([]);
-  const [outcome, setOutcome] = useState(null); // 'success', 'fail', 'bonus', 'fakeout', 'false-bonus'
-  const [outcomeWeaponName, setOutcomeWeaponName] = useState('');
-  const [bonusUpgradeNotice, setBonusUpgradeNotice] = useState('');
-  const [previewWeaponState, setPreviewWeaponState] = useState(null);
-  const [flashClass, setFlashClass] = useState('');
-
-  const timingStartedAtRef = useRef(0);
-  const timingGradeRef = useRef('miss');
   const expeditionRunCounterRef = useRef(0);
   const expeditionSettlementLockRef = useRef(new Set());
   const expeditionEconomyTransactionRef = useRef(0);
@@ -622,7 +610,6 @@ function App() {
     const allowedIds = new Set(TITLE_DEFINITIONS.map(title => title.id));
     return [...new Set(readStoredArray('claimedTitleRewards').filter(id => allowedIds.has(id)))];
   });
-  const [timingWindow, setTimingWindow] = useState({ active: false, grade: null, position: null });
   const claimedTitleRewardLockRef = useRef(new Set(claimedTitleRewards));
 
   const addLog = (msg, type = 'info') => {
@@ -632,6 +619,39 @@ function App() {
   const playSfx = useCallback((name) => {
     playSoundEffect(name, soundEnabled);
   }, [soundEnabled]);
+
+  const {
+    isEnhancing,
+    setIsEnhancing,
+    enhancementPhase,
+    setEnhancementPhase,
+    isStriking,
+    particles,
+    strikeTexts,
+    outcome,
+    setOutcome,
+    outcomeWeaponName,
+    setOutcomeWeaponName,
+    bonusUpgradeNotice,
+    setBonusUpgradeNotice,
+    previewWeaponState,
+    setPreviewWeaponState,
+    flashClass,
+    timingWindow,
+    resetTimingChallenge,
+    startTimingChallenge,
+    finishTimingChallenge,
+    handleTimingHit,
+    triggerFlash,
+    triggerStrike,
+    scheduleStrike,
+    triggerSuccessParticles,
+    triggerGreatSuccessParticles,
+    triggerFailParticles,
+  } = useEnhancementSession({
+    playSfx,
+    addLog,
+  });
 
   const cycleViewportMode = () => {
     playSfx('page');
@@ -1304,153 +1324,6 @@ function App() {
     addLog(`🧰 복원 무기고에서 +${safeTier} [${getWeaponNameByState(restoredState.tier, restoredState.path)}]을 복원했습니다.`, 'success');
   };
 
-  const handleTimingHit = () => {
-    if (!timingWindow.active || !timingStartedAtRef.current) return;
-
-    const duration = 1800;
-    const cycleProgress = ((Date.now() - timingStartedAtRef.current) % duration) / duration;
-    const position = cycleProgress <= 0.5 ? cycleProgress * 200 : (1 - cycleProgress) * 200;
-    const distanceFromCenter = Math.abs(position - 50);
-    const grade = distanceFromCenter <= 8 ? 'perfect' : distanceFromCenter <= 20 ? 'good' : 'miss';
-    timingGradeRef.current = grade;
-    setTimingWindow({ active: false, grade, position });
-    playSfx(grade === 'perfect' ? 'success' : grade === 'good' ? 'page' : 'wrong');
-    triggerStrike(grade === 'perfect' ? '정확!' : grade === 'good' ? '좋아!' : '빗나감', grade === 'perfect' ? 34 : grade === 'good' ? 22 : 10);
-    addLog(
-      grade === 'perfect'
-        ? `🎯 PERFECT! 기본 성공률에 +${TIMING_BONUS.perfect}%p가 더해집니다.`
-        : grade === 'good'
-          ? `👍 GOOD! 기본 성공률에 +${TIMING_BONUS.good}%p가 더해집니다.`
-          : `타이밍 보너스 없이 기본 확률로 판정합니다.`,
-      grade === 'perfect' ? 'great-success' : grade === 'good' ? 'success' : 'info'
-    );
-  };
-
-  const triggerFlash = (type) => {
-    setFlashClass(`flash-${type}`);
-    setTimeout(() => setFlashClass(''), 1000);
-  };
-
-  const triggerStrike = (text = '깡!', particleCount = 15) => {
-    playSfx('hammer');
-    setIsStriking(true);
-    setTimeout(() => setIsStriking(false), 150);
-
-    // Strike text pop
-    const strikeId = `${Date.now()}-${Math.random()}`;
-    const textX = 35 + Math.random() * 30;
-    const textY = 25 + Math.random() * 20;
-    setStrikeTexts(prev => [...prev, { id: strikeId, text, x: `${textX}%`, top: `${textY}%` }]);
-    setTimeout(() => {
-      setStrikeTexts(prev => prev.filter(t => t.id !== strikeId));
-    }, 400);
-
-    // Spark particles
-    const newParticles = [];
-    for (let i = 0; i < particleCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 40 + Math.random() * 80;
-      const dx = Math.cos(angle) * speed;
-      const dy = Math.sin(angle) * speed;
-      newParticles.push({
-        id: `${Date.now()}-strike-${i}-${Math.random()}`,
-        left: '50%',
-        top: '55%',
-        dx: `${dx}px`,
-        dy: `${dy}px`,
-        type: 'spark'
-      });
-    }
-    setParticles(prev => [...prev, ...newParticles]);
-    setTimeout(() => {
-      setParticles(prev => prev.filter(p => !newParticles.includes(p)));
-    }, 600);
-  };
-
-  const scheduleStrike = (delay, text, particleCount) => {
-    setTimeout(() => triggerStrike(text, particleCount), Math.max(0, delay));
-  };
-
-  const triggerSuccessParticles = () => {
-    const newParticles = [];
-    for (let i = 0; i < 30; i++) {
-      const dx = (Math.random() - 0.5) * 160;
-      const dy = -80 - Math.random() * 120; // shoot upwards
-      newParticles.push({
-        id: `${Date.now()}-success-${i}-${Math.random()}`,
-        left: `${35 + Math.random() * 30}%`,
-        top: '55%',
-        dx: `${dx}px`,
-        dy: `${dy}px`,
-        type: 'spark'
-      });
-    }
-    setParticles(prev => [...prev, ...newParticles]);
-    setTimeout(() => {
-      setParticles(prev => prev.filter(p => !newParticles.includes(p)));
-    }, 600);
-  };
-
-  const triggerGreatSuccessParticles = (intensity = 1) => {
-    const newParticles = [];
-    const sparkCount = Math.round(42 * intensity);
-    const rayCount = Math.round(12 * intensity);
-
-    for (let i = 0; i < sparkCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 90 + Math.random() * 170;
-      const dx = Math.cos(angle) * speed;
-      const dy = Math.sin(angle) * speed - 40;
-      newParticles.push({
-        id: `${Date.now()}-great-spark-${i}-${Math.random()}`,
-        left: `${43 + Math.random() * 14}%`,
-        top: `${44 + Math.random() * 18}%`,
-        dx: `${dx}px`,
-        dy: `${dy}px`,
-        type: 'bonus-spark'
-      });
-    }
-
-    for (let i = 0; i < rayCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 110 + Math.random() * 120;
-      newParticles.push({
-        id: `${Date.now()}-great-ray-${i}-${Math.random()}`,
-        left: '50%',
-        top: '50%',
-        dx: `${Math.cos(angle) * distance}px`,
-        dy: `${Math.sin(angle) * distance}px`,
-        rotate: `${angle}rad`,
-        type: 'bonus-ray'
-      });
-    }
-
-    setParticles(prev => [...prev, ...newParticles]);
-    setTimeout(() => {
-      setParticles(prev => prev.filter(p => !newParticles.includes(p)));
-    }, 1400);
-  };
-
-  const triggerFailParticles = () => {
-    const newParticles = [];
-    for (let i = 0; i < 20; i++) {
-      const dx = (Math.random() - 0.5) * 100;
-      const dy = -50 - Math.random() * 60; // slow rise
-      newParticles.push({
-        id: `${Date.now()}-fail-${i}-${Math.random()}`,
-        left: `${40 + Math.random() * 20}%`,
-        top: '50%',
-        dx: `${dx}px`,
-        dy: `${dy}px`,
-        type: 'smoke'
-      });
-    }
-    setParticles(prev => [...prev, ...newParticles]);
-    setTimeout(() => {
-      setParticles(prev => prev.filter(p => !newParticles.includes(p)));
-    }, 1000);
-  };
-
   const applySuccessfulUpgradeStep = (targetTier, targetPath) => {
     const nextState = normalizeWeaponState(targetTier, targetPath, path || TIMELINE_PATH);
     setTier(nextState.tier);
@@ -1604,9 +1477,7 @@ function App() {
     setIsEnhancing(true);
     setEnhancementPhase('hammering');
     setPreviewWeaponState(null);
-    timingGradeRef.current = 'miss';
-    timingStartedAtRef.current = 0;
-    setTimingWindow({ active: false, grade: null, position: null });
+    resetTimingChallenge();
     addLog(`대장장이가 망치를 고쳐 쥐고 벼리기를 시작합니다...`, 'info');
 
     const strikeSequence = [
@@ -1630,8 +1501,7 @@ function App() {
 
     setTimeout(() => {
       setEnhancementPhase('judging');
-      timingStartedAtRef.current = Date.now();
-      setTimingWindow({ active: true, grade: null, position: null });
+      startTimingChallenge();
       playSfx('tension');
       addLog(`불꽃이 무기 위에서 크게 흔들립니다. 움직이는 표식이 중앙에 올 때 마지막 타격을 입력하세요.`, 'warning');
     }, judgingDelay);
@@ -1643,8 +1513,7 @@ function App() {
       setIsEnhancing(false);
       setEnhancementPhase('idle');
       setBonusUpgradeNotice('');
-      setTimingWindow(prev => ({ ...prev, active: false, grade: prev.grade || 'miss' }));
-      const timingGrade = timingGradeRef.current;
+      const timingGrade = finishTimingChallenge();
       const effectiveRate = Math.min(100, currentRateInfo.rate + TIMING_BONUS[timingGrade]);
       const roll = Math.random() * 100;
 
