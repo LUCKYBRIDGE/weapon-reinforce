@@ -38,6 +38,12 @@ const persistActiveExpedition = (run, onFailure) => {
   }
 };
 
+const isReleaseQaRun = run => (
+  import.meta.env.DEV
+  && typeof run?.runId === 'string'
+  && run.runId.startsWith('release-qa-')
+);
+
 const persistExpeditionEconomy = (economy, onFailure) => {
   try {
     localStorage.setItem('weaponExpeditionEconomyV1', JSON.stringify(economy));
@@ -85,6 +91,7 @@ export default function useExpeditionSession({
   }, [expeditionStats, onStorageFailure]);
 
   useEffect(() => {
+    if (isReleaseQaRun(expedition)) return;
     persistActiveExpedition(expedition, onStorageFailure);
   }, [expedition, onStorageFailure]);
 
@@ -93,7 +100,9 @@ export default function useExpeditionSession({
   }, [expeditionEconomy, onStorageFailure]);
 
   const flushActiveExpedition = useCallback(() => (
-    persistActiveExpedition(expedition, onStorageFailure)
+    isReleaseQaRun(expedition)
+      ? true
+      : persistActiveExpedition(expedition, onStorageFailure)
   ), [expedition, onStorageFailure]);
 
   const handleUnlockHistoryCard = useCallback((cardId) => {
@@ -144,6 +153,10 @@ export default function useExpeditionSession({
 
   const handleContinueExpedition = useCallback(() => {
     if (!expedition || expedition.phase !== 'decision') return;
+    if (isReleaseQaRun(expedition)) {
+      addLog('[테스트] 릴리스 QA에서는 다음 층 진행을 차단합니다. QA 종료를 사용하세요.', 'warning');
+      return;
+    }
 
     const next = continueExpedition(expedition);
     if (next === expedition) return;
@@ -151,7 +164,7 @@ export default function useExpeditionSession({
     persistActiveExpedition(next, onStorageFailure);
     setExpedition(next);
     playSfx('page');
-  }, [expedition, onStorageFailure, playSfx]);
+  }, [addLog, expedition, onStorageFailure, playSfx]);
 
   const handleSupportChoice = useCallback((choiceId) => {
     if (!expedition || !['npc-choice', 'event-choice'].includes(expedition.phase)) return;
@@ -172,6 +185,10 @@ export default function useExpeditionSession({
 
   const handleReturnExpedition = useCallback(() => {
     if (!expedition || expedition.phase !== 'decision') return;
+    if (isReleaseQaRun(expedition)) {
+      addLog('[테스트] 릴리스 QA에서는 실제 귀환 정산을 차단합니다. QA 종료를 사용하세요.', 'warning');
+      return;
+    }
 
     const settled = settleExpeditionReturn(expedition);
     const settlementId = settled.settlement?.id;
@@ -215,7 +232,7 @@ export default function useExpeditionSession({
   }, [expedition, onStorageFailure, playSfx]);
 
   useEffect(() => {
-    if (!expedition || expedition.settled) return undefined;
+    if (!expedition || expedition.settled || isReleaseQaRun(expedition)) return undefined;
 
     const automatedPhases = [
       'enemy-intro',
@@ -428,6 +445,27 @@ export default function useExpeditionSession({
     playSfx,
   ]);
 
+  const replaceExpeditionForDebug = useCallback((value, label = '릴리스 QA') => {
+    if (!import.meta.env.DEV) return false;
+
+    const nextRun = value ? sanitizeExpeditionRun(value) : null;
+    if (value && !nextRun) {
+      addLog(`[테스트] ${label} 탐사 상태가 sanitize 검증을 통과하지 못했습니다.`, 'warning');
+      return false;
+    }
+
+    setExpeditionSpeed(1);
+    persistActiveExpedition(null, onStorageFailure);
+    setExpedition(nextRun);
+    addLog(
+      nextRun
+        ? `[테스트] ${label} 화면을 열었습니다.`
+        : '[테스트] 릴리스 QA 탐사 화면을 종료했습니다.',
+      'warning',
+    );
+    return true;
+  }, [addLog, onStorageFailure]);
+
   const toggleExpeditionSpeed = useCallback(() => {
     setExpeditionSpeed(current => current === 1 ? 2 : 1);
   }, []);
@@ -453,5 +491,6 @@ export default function useExpeditionSession({
     handleBuyExpeditionSupply,
     handleEquipExpeditionSupply,
     toggleExpeditionSpeed,
+    replaceExpeditionForDebug,
   };
 }

@@ -19,6 +19,9 @@
 - [x] `npm run validate:publish`: 수동 게이트 완료와 RC→Stable 문서 전환을 요구하는 정식 발행 전용 검증을 제공한다.
 - [x] `.github/workflows/release.yml`: 최신 master·버전·수동 완료 확인·태그 중복을 검사한 뒤에만 GitHub Release를 발행한다.
 - [x] `validate:release`: 현재 문서가 RC이면 `validate:publish`가 실제로 실패하고 Stable이면 성공하는지 subprocess로 자가검증한다.
+- [x] `npm run validate:release-qa`: DEV 릴리스 QA의 선택형 NPC/사건·치명타/회복/지원공격·방어경감 fixture가 실제 탐사 sanitize 계약을 통과하는지 검사한다.
+- [x] `?debug=1` DEV 패널에서 선택형 NPC/사건, 전투 피드백 3종 동시, 방어 경감, 저장·백업 화면을 즉시 재현할 수 있다.
+- [x] DEV QA 탐사는 localStorage에 저장하지 않고 자동 전투·귀환 정산·다음 층 진행·탐사 파일 백업을 차단한다.
 
 ## 저장과 복구
 

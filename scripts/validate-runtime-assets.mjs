@@ -78,10 +78,30 @@ const sizes = await Promise.all(files.map(file => stat(file).then(info => info.s
 const totalBytes = sizes.reduce((sum, size) => sum + size, 0);
 assert(totalBytes <= maxRuntimeBytes, `배포물 크기가 10MB 상한을 넘었습니다: ${(totalBytes / 1024 / 1024).toFixed(1)}MB`);
 
+const productionJsFiles = files.filter(file => /(?:^|\/)assets\/[^/]+\.js$/i.test(relative(distRoot, file).replaceAll('\\', '/')));
+const forbiddenDevMarkers = [
+  'release-qa-',
+  '1.2 릴리스 QA 빠른 재현',
+  '릴리스 QA 탐사',
+];
+const leakedDevMarkers = [];
+for (const file of productionJsFiles) {
+  const source = await readFile(file, 'utf8');
+  for (const marker of forbiddenDevMarkers) {
+    if (source.includes(marker)) {
+      leakedDevMarkers.push(`${relative(distRoot, file).replaceAll('\\', '/')}: ${marker}`);
+    }
+  }
+}
+assert(
+  leakedDevMarkers.length === 0,
+  `DEV 릴리스 QA 코드가 프로덕션 JS에 포함되었습니다: ${leakedDevMarkers.slice(0, 3).join(', ')}`,
+);
+
 const indexHtml = await readFile(resolve(distRoot, 'index.html'), 'utf8');
 assert(indexHtml.includes('/weapon-reinforce/'), '프로덕션 index.html에 /weapon-reinforce/ base path가 없습니다.');
 assert(indexHtml.includes('<html lang="ko">'), '프로덕션 문서 언어가 한국어로 설정되지 않았습니다.');
 assert(indexHtml.includes('name="description"'), '프로덕션 문서에 검색 설명이 없습니다.');
 assert(indexHtml.includes('시간역행 대장간 | 한국 무기 강화·역사 퀴즈'), '프로덕션 문서 제목이 출시명과 다릅니다.');
 
-console.log(`런타임 자산 ${files.length}개, ${(totalBytes / 1024 / 1024).toFixed(1)}MB 검증 통과 · 퀴즈 허용 파일 ${expectedQuizFiles.size}개 · 한국어 문서 메타데이터 · 분리 모험 자산 0개`);
+console.log(`런타임 자산 ${files.length}개, ${(totalBytes / 1024 / 1024).toFixed(1)}MB 검증 통과 · 퀴즈 허용 파일 ${expectedQuizFiles.size}개 · 한국어 문서 메타데이터 · 분리 모험 자산 0개 · DEV 릴리스 QA 누출 0개`);

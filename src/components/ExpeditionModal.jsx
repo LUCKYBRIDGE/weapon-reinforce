@@ -97,12 +97,14 @@ export default function ExpeditionModal({
   onChooseSupport,
   onSaveCheckpoint,
   onClose,
+  onDebugClose,
 }) {
   const dialogRef = useRef(null);
   const returnFocusRef = useRef(null);
   const runId = run?.runId || null;
   const isFinal = run?.phase === 'returned' || run?.phase === 'defeated';
   const isSupportChoicePhase = ['npc-choice', 'event-choice'].includes(run?.phase);
+  const isDebugPreview = typeof onDebugClose === 'function';
 
   useEffect(() => {
     if (!runId) return undefined;
@@ -192,7 +194,8 @@ export default function ExpeditionModal({
     if (event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
-      if (isFinal) onClose();
+      if (isDebugPreview) onDebugClose();
+      else if (isFinal) onClose();
       return;
     }
     if (event.key !== 'Tab') return;
@@ -236,7 +239,9 @@ export default function ExpeditionModal({
 
         <header className="expedition-heading">
           <div>
-            <span className="expedition-kicker">후방 반신 대치 · 공격 순간 1인칭 자동전투</span>
+            <span className="expedition-kicker">
+              {isDebugPreview ? 'DEV 릴리스 QA · 저장/정산 없는 화면 미리보기' : '후방 반신 대치 · 공격 순간 1인칭 자동전투'}
+            </span>
             <h2 id="expedition-title">🗺️ 시간 균열 탐사</h2>
           </div>
           <div className="expedition-record" aria-label="누적 탐사 기록">
@@ -252,7 +257,7 @@ export default function ExpeditionModal({
           <span>{run.encounter.region.name}</span>
           <span>{run.encounter.place}</span>
           <strong>깊이 {run.depth}/{EXPEDITION_RULES.maxDepth}</strong>
-          {!isFinal && (
+          {!isFinal && !isDebugPreview && (
             <button
               type="button"
               className="expedition-save-btn"
@@ -262,7 +267,7 @@ export default function ExpeditionModal({
               💾 파일 백업
             </button>
           )}
-          {!isFinal && (
+          {!isFinal && !isDebugPreview && (
             <button
               type="button"
               onClick={onToggleSpeed}
@@ -270,6 +275,16 @@ export default function ExpeditionModal({
               aria-label={`현재 ${speed}배속, ${speed === 1 ? '2배속으로 바꾸기' : '1배속으로 바꾸기'}`}
             >
               ×{speed} 속도
+            </button>
+          )}
+          {isDebugPreview && (
+            <button
+              type="button"
+              className="expedition-save-btn"
+              onClick={onDebugClose}
+              data-expedition-open-focus={!isSupportChoice ? '' : undefined}
+            >
+              🧪 QA 종료
             </button>
           )}
         </div>
@@ -423,15 +438,24 @@ export default function ExpeditionModal({
               <p>현재 체력 {run.playerHp}/{run.playerMaxHp} · 쓰러지면 임시 전리품과 최대 {Math.round(EXPEDITION_RULES.deathCoinLossCap * run.goldLossMultiplier)}냥을 잃습니다.</p>
             </div>
             <div className="expedition-actions">
-              <button type="button" className="expedition-return-btn" onClick={onReturn} data-expedition-open-focus="">
-                안전하게 복귀
-                <small>전리품 전부 보관</small>
-              </button>
-              {!atMaxDepth && (
-                <button type="button" className="expedition-continue-btn" onClick={onContinue}>
-                  더 깊이 탐사
-                  <small>체력을 유지하고 다음 역사층</small>
+              {isDebugPreview ? (
+                <button type="button" className="expedition-return-btn" onClick={onDebugClose} data-expedition-open-focus="">
+                  QA 화면 종료
+                  <small>실제 귀환 정산·다음 층 진행 없음</small>
                 </button>
+              ) : (
+                <>
+                  <button type="button" className="expedition-return-btn" onClick={onReturn} data-expedition-open-focus="">
+                    안전하게 복귀
+                    <small>전리품 전부 보관</small>
+                  </button>
+                  {!atMaxDepth && (
+                    <button type="button" className="expedition-continue-btn" onClick={onContinue}>
+                      더 깊이 탐사
+                      <small>체력을 유지하고 다음 역사층</small>
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </section>

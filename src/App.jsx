@@ -29,6 +29,10 @@ import {
   readStoredString,
   sanitizeCountRecord,
 } from './data/safeStorage.js';
+import {
+  buildReleaseQaChoiceRun,
+  buildReleaseQaCombatRun,
+} from './data/releaseQaScenarios.js';
 import ExpeditionModal from './components/ExpeditionModal.jsx';
 import ExpeditionWorkshopModal from './components/ExpeditionWorkshopModal.jsx';
 import HistoryArchiveModal from './components/HistoryArchiveModal.jsx';
@@ -41,6 +45,7 @@ import useGameStorage from './hooks/useGameStorage.js';
 const SHOW_DEV_TOOLS = import.meta.env.DEV
   && typeof window !== 'undefined'
   && new URLSearchParams(window.location.search).get('debug') === '1';
+
 
 const getTodayStr = () => {
   const d = new Date();
@@ -726,6 +731,7 @@ function App() {
     handleBuyExpeditionSupply,
     handleEquipExpeditionSupply,
     toggleExpeditionSpeed,
+    replaceExpeditionForDebug,
   } = useExpeditionSession({
     tier,
     weaponName,
@@ -1561,6 +1567,27 @@ function App() {
     finishPreview(thirdBonusRevealDelay + 4500);
   };
 
+  const handleReleaseQaExpedition = (scenario) => {
+    if (!SHOW_DEV_TOOLS) return;
+
+    try {
+      const nextRun = scenario === 'npc-choice'
+        ? buildReleaseQaChoiceRun('npc')
+        : scenario === 'event-choice'
+          ? buildReleaseQaChoiceRun('event')
+          : buildReleaseQaCombatRun(scenario);
+      if (!nextRun) throw new Error('QA 탐사 상태 생성에 실패했습니다.');
+      replaceExpeditionForDebug(nextRun, `릴리스 QA · ${scenario}`);
+    } catch (error) {
+      addLog(`[테스트] 릴리스 QA 화면 생성 실패: ${error?.message || '알 수 없는 오류'}`, 'warning');
+    }
+  };
+
+  const handleReleaseQaClose = () => {
+    if (!SHOW_DEV_TOOLS) return;
+    replaceExpeditionForDebug(null);
+  };
+
   // [테스트 전용] 특정 무기를 즉시 세팅
   const handleTestSetWeapon = (testPath, testTier) => {
     if (!SHOW_DEV_TOOLS || isGameplayLocked) return;
@@ -1875,6 +1902,59 @@ function App() {
               <small>도감 수량 변화 없음</small>
             </button>
           </div>
+        </div>
+        <div className="dev-preview-panel">
+          <div className="dev-preview-title">1.2 릴리스 QA 빠른 재현</div>
+          <div className="dev-preview-grid">
+            <button
+              className="dev-preview-btn"
+              type="button"
+              disabled={Boolean(expedition)}
+              onClick={() => handleReleaseQaExpedition('npc-choice')}
+            >
+              <span>선택형 NPC</span>
+              <small>390px 터치·가로 넘침</small>
+            </button>
+            <button
+              className="dev-preview-btn"
+              type="button"
+              disabled={Boolean(expedition)}
+              onClick={() => handleReleaseQaExpedition('event-choice')}
+            >
+              <span>선택형 사건</span>
+              <small>390px 터치·가로 넘침</small>
+            </button>
+            <button
+              className="dev-preview-btn"
+              type="button"
+              disabled={Boolean(expedition)}
+              onClick={() => handleReleaseQaExpedition('player-feedback')}
+            >
+              <span>전투 배지 3종</span>
+              <small>치명타·회복·지원 공격 동시</small>
+            </button>
+            <button
+              className="dev-preview-btn"
+              type="button"
+              disabled={Boolean(expedition)}
+              onClick={() => handleReleaseQaExpedition('guard-feedback')}
+            >
+              <span>방어 경감 배지</span>
+              <small>HP·대사창 겹침 확인</small>
+            </button>
+            <button
+              className="dev-preview-btn"
+              type="button"
+              disabled={Boolean(expedition) || showSaveManagerModal}
+              onClick={openSaveManager}
+            >
+              <span>저장·백업 열기</span>
+              <small>OS 파일 선택 왕복 시작</small>
+            </button>
+          </div>
+          <small style={{display: 'block', color: '#94a3b8', marginTop: '0.55rem'}}>
+            Chrome DevTools에서 폭 390px로 맞춘 뒤 확인하세요. QA 탐사는 실제 진행 보상에 정산되지 않습니다.
+          </small>
         </div>
         <button
           style={{background: '#7c3aed', padding: '0.5rem 1rem', borderRadius: '0.5rem', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.9rem', width: '100%', marginTop: '0.4rem'}}
@@ -2313,6 +2393,7 @@ function App() {
         onChooseSupport={handleSupportChoice}
         onSaveCheckpoint={handleExportGameSave}
         onClose={handleCloseExpedition}
+        onDebugClose={SHOW_DEV_TOOLS ? handleReleaseQaClose : undefined}
       />
 
       {/* CURIOSITY DROP REVEAL */}

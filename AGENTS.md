@@ -41,6 +41,7 @@
 - Reinforcement/expedition balance simulation: `npm run validate:balance`
 - Built runtime allowlist/size validation: `npm run validate:runtime` (run after `npm run build`)
 - Release readiness validation: `npm run validate:release`
+- Release QA fixture validation: `npm run validate:release-qa`
 - Final publish validation after manual gates: `npm run validate:publish`
 - Full release gate: `npm run validate:all`
 
@@ -50,6 +51,7 @@
 - Keep progress serverless: browser `localStorage` is the automatic checkpoint and the versioned JSON file is the portable backup/restore path.
 - Keep gameplay changes small and verify with `npm run build`; use `npm run lint` when touching code.
 - Validate visible UI changes with browser or Playwright checks on desktop and mobile-sized viewports when practical.
+- For the 1.2 manual release gates in development, use `?debug=1` and the release QA shortcuts; QA expedition previews must remain DEV-only, unsaved, auto-progress-paused, and excluded from real settlement.
 - Update `PROJECT_STATUS.md` and `CHECKLIST.md` after meaningful behavior or UI changes.
 - Keep quiz earning data as a reviewed snapshot. Do not fetch another app's files at runtime.
 - Do not reintroduce the retired rabbit/turtle visual-novel runtime. Its historical source assets remain outside the deployable allowlist until a separate migration task removes or moves them.
