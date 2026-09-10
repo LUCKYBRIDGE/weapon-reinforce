@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 import { WEAPON_TIMELINE } from '../src/data/weaponTimeline.js';
 import { QUIZ_PACKS, QUIZ_TOTAL_QUESTION_COUNT } from '../src/data/quizCatalog.js';
@@ -116,6 +117,45 @@ assert(
   && expectedCounts.regions === 3
   && expectedCounts.historyLayers === 7,
   '1.2 핵심 콘텐츠 기준선(무기 7·지역 3·역사층 7)이 바뀌었습니다.',
+);
+
+const publishCheck = spawnSync(
+  process.execPath,
+  [resolve(projectRoot, 'scripts/validate-release-publish.mjs')],
+  {
+    cwd: projectRoot,
+    encoding: 'utf8',
+  },
+);
+const isStableRelease = releaseNotes.includes('상태: **정식 릴리스(Stable)**');
+
+if (isStableRelease) {
+  assert(
+    publishCheck.status === 0,
+    `Stable 문서 상태인데 정식 publish 검증이 실패했습니다:\n${publishCheck.stderr || publishCheck.stdout}`,
+  );
+} else {
+  assert(
+    publishCheck.status !== 0,
+    'Release Candidate 상태인데 정식 publish 검증이 성공했습니다. 수동 게이트 보호가 약화되었습니다.',
+  );
+  const blockedByExpectedGate = [
+    '정식 릴리스 전에 미완료 체크가 없어야 합니다',
+    '수동 릴리스 게이트가 완료 처리되지 않았습니다',
+    '정식 릴리스(Stable)',
+    '릴리스 후보',
+    'current release baseline',
+  ].some(fragment => `${publishCheck.stderr}\n${publishCheck.stdout}`.includes(fragment));
+  assert(
+    blockedByExpectedGate,
+    `Release Candidate publish 검증이 예상하지 못한 이유로 실패했습니다:\n${publishCheck.stderr || publishCheck.stdout}`,
+  );
+}
+
+console.log(
+  isStableRelease
+    ? '정식 publish 게이트 자가검증 통과 · Stable 상태에서 publish validator 성공'
+    : '정식 publish 게이트 자가검증 통과 · RC 상태에서 publish validator 차단 확인',
 );
 
 console.log(
