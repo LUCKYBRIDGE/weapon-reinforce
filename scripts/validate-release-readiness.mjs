@@ -29,12 +29,14 @@ assert(version && /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version), 'packa
 assert(packageLock.version === version, 'package-lock.json 최상위 version이 package.json과 다릅니다.');
 assert(packageLock.packages?.['']?.version === version, 'package-lock packages[""].version이 package.json과 다릅니다.');
 
-const [readme, checklist, status, agents, releaseNotes] = await Promise.all([
+const [readme, checklist, status, agents, releaseNotes, publishingGuide, releaseWorkflow] = await Promise.all([
   readText('README.md'),
   readText('CHECKLIST.md'),
   readText('PROJECT_STATUS.md'),
   readText('AGENTS.md'),
   readText(`docs/releases/v${version}.md`),
+  readText('docs/releases/PUBLISHING.md'),
+  readText('.github/workflows/release.yml'),
 ]);
 
 assert(
@@ -53,6 +55,22 @@ assert(
   releaseNotes.startsWith(`# Weapon Reinforce ${version}`),
   '릴리스 노트 제목이 package version과 일치하지 않습니다.',
 );
+
+assert(
+  packageJson.scripts?.['validate:publish'] === 'node scripts/validate-release-publish.mjs',
+  '정식 릴리스 publish 검증 스크립트가 package.json에 연결되지 않았습니다.',
+);
+assert(
+  publishingGuide.includes('.github/workflows/release.yml')
+  && publishingGuide.includes('npm run validate:publish'),
+  '정식 릴리스 발행 절차 문서가 publish workflow/validator를 설명하지 않습니다.',
+);
+assert(releaseWorkflow.includes('workflow_dispatch:'), 'release workflow는 수동 실행 전용이어야 합니다.');
+assert(releaseWorkflow.includes('contents: write'), 'release workflow에 contents write 권한이 없습니다.');
+assert(releaseWorkflow.includes('manual_gates_confirmed'), 'release workflow에 수동 게이트 확인 입력이 없습니다.');
+assert(releaseWorkflow.includes('npm run validate:all'), 'release workflow가 전체 출시 게이트를 재실행하지 않습니다.');
+assert(releaseWorkflow.includes('npm run validate:publish'), 'release workflow가 최종 publish 게이트를 실행하지 않습니다.');
+assert(releaseWorkflow.includes('gh release create'), 'release workflow에 GitHub Release 발행 단계가 없습니다.');
 
 const expectedCounts = {
   weapons: Object.keys(WEAPON_TIMELINE).length,
