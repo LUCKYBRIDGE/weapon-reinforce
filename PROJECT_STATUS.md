@@ -296,7 +296,14 @@ P1 구조 개선은 완료되었다. 1.2의 상세 범위와 수치 기준은 [1
   - `validate:release`를 `validate:all`에 포함
   - 자동 검증이 모두 성공해도 실제 브라우저/OS 수동 게이트 3건 전에는 태그·GitHub Release를 만들지 않음
 
-다음 단계는 **수동 릴리스 게이트 3건 완료 → 전체 `validate:all` 재실행 → `v1.2.0` 태그/Release 생성**이다.
+정식 발행 안전장치도 준비했다.
+
+- `npm run validate:publish`: 수동 3건 완료와 RC→Stable 문서 전환이 모두 끝나야 통과
+- `.github/workflows/release.yml`: `master` 수동 실행 전용, 버전·최신 HEAD·수동 확인·기존 태그를 검사
+- `docs/releases/PUBLISHING.md`: 최종화 PR과 Release 발행 순서 기록
+- 현재 RC에서는 `validate:publish`가 실패하는 것이 의도된 상태이며 태그/Release를 만들지 않음
+
+다음 단계는 **수동 릴리스 게이트 3건 완료 → 최종화 PR → Pages 성공 확인 → Publish GitHub Release 워크플로 실행**이다.
 
 기존 후보 목록은 아래와 같다.
 
