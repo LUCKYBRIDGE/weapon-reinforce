@@ -22,8 +22,9 @@
     "validate:balance": "node scripts/simulate-game-balance.mjs",
     "validate:runtime": "node scripts/validate-runtime-assets.mjs",
     "validate:release": "node scripts/validate-release-readiness.mjs",
+    "validate:release-qa": "node scripts/validate-release-qa.mjs",
     "validate:publish": "node scripts/validate-release-publish.mjs",
-    "validate:all": "npm run validate:weapons && npm run validate:quizzes && npm run validate:saves && npm run validate:save-file && npm run validate:economy && npm run validate:expedition && npm run validate:balance && npm run validate:release && npm run lint && npm run build && npm run validate:runtime",
+    "validate:all": "npm run validate:weapons && npm run validate:quizzes && npm run validate:saves && npm run validate:save-file && npm run validate:economy && npm run validate:expedition && npm run validate:balance && npm run validate:release-qa && npm run validate:release && npm run lint && npm run build && npm run validate:runtime",
     "preview": "vite preview"
   },
   "dependencies": {
