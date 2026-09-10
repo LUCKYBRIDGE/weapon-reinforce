@@ -41,6 +41,7 @@
 - Reinforcement/expedition balance simulation: `npm run validate:balance`
 - Built runtime allowlist/size validation: `npm run validate:runtime` (run after `npm run build`)
 - Release readiness validation: `npm run validate:release`
+- Final publish validation after manual gates: `npm run validate:publish`
 - Full release gate: `npm run validate:all`
 
 ## Change Safety Rules
@@ -60,6 +61,8 @@
 - Canonical repository: `LUCKYBRIDGE/weapon-reinforce`, default branch in this checkout `master`.
 - Package version `1.2.0` is the current release-candidate baseline. Preserve its desktop, tablet, mobile, reload-resume, save-envelope, combat/choice, balance, and production-preview release checks.
 - Do not create the `v1.2.0` tag or GitHub Release while CHECKLIST.md still has an unchecked manual release gate.
+- After the manual gates are complete, finalize CHECKLIST/README/PROJECT_STATUS/AGENTS/release notes in a PR, then use `.github/workflows/release.yml` from `master`; the workflow must pass both `validate:all` and `validate:publish` before creating the tag/Release.
+- The guarded publish procedure is documented in `docs/releases/PUBLISHING.md`.
 - This checkout contains substantial ongoing work; preserve unrelated changes and use a clean worktree for scoped publish requests when necessary.
 - Before release, run `npm run validate:all`, inspect the runtime allowlist/size report and scoped diff, then smoke-test the changed gameplay/save flow in a browser.
 - Commit, push, GitHub Pages deployment, and any asset publication are separate explicit actions.
