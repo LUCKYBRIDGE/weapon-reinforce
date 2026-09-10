@@ -15,11 +15,12 @@ const packageJson = await readJson('package.json');
 const version = packageJson.version;
 const tag = `v${version}`;
 
-const [checklist, releaseNotes, readme, status] = await Promise.all([
+const [checklist, releaseNotes, readme, status, agents] = await Promise.all([
   readText('CHECKLIST.md'),
   readText(`docs/releases/v${version}.md`),
   readText('README.md'),
   readText('PROJECT_STATUS.md'),
+  readText('AGENTS.md'),
 ]);
 
 const manualGateMarkers = [
@@ -67,6 +68,19 @@ assert(
 assert(
   !status.includes('현재 릴리스 후보:'),
   'PROJECT_STATUS에 릴리스 후보 문구가 남아 있습니다.',
+);
+
+assert(
+  agents.includes(`Package version \`${version}\` is the current release baseline.`),
+  'AGENTS의 package baseline을 current release baseline으로 확정해야 합니다.',
+);
+assert(
+  !agents.includes('current release-candidate baseline'),
+  'AGENTS에 release-candidate baseline 문구가 남아 있습니다.',
+);
+assert(
+  !releaseNotes.split(/\r?\n/).some(line => /^- \[ \]/.test(line.trim())),
+  '릴리스 노트에 미완료 체크박스가 남아 있습니다.',
 );
 
 console.log(
