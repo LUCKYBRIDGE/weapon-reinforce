@@ -30,10 +30,9 @@ import {
   sanitizeCountRecord,
 } from './data/safeStorage.js';
 import {
-  createExpeditionRun,
-  sanitizeExpeditionRun,
-  selectExpeditionEncounter,
-} from './data/expedition.js';
+  buildReleaseQaChoiceRun,
+  buildReleaseQaCombatRun,
+} from './data/releaseQaScenarios.js';
 import ExpeditionModal from './components/ExpeditionModal.jsx';
 import ExpeditionWorkshopModal from './components/ExpeditionWorkshopModal.jsx';
 import HistoryArchiveModal from './components/HistoryArchiveModal.jsx';
@@ -47,95 +46,6 @@ const SHOW_DEV_TOOLS = import.meta.env.DEV
   && typeof window !== 'undefined'
   && new URLSearchParams(window.location.search).get('debug') === '1';
 
-
-const RELEASE_QA_WEAPON_TIER = 7;
-
-const getReleaseQaSupportSelection = (type) => {
-  for (let seed = 101; seed <= 5000; seed += 1) {
-    const selected = selectExpeditionEncounter({
-      depth: 2,
-      rngState: seed,
-      recentEncounterIds: [],
-      recentEncounterTypes: [],
-      enemyStreak: 0,
-    });
-    if (selected.encounter.type === type && selected.encounter.choices?.length === 2) {
-      return selected;
-    }
-  }
-  throw new Error(`릴리스 QA용 선택형 ${type} 조우를 찾지 못했습니다.`);
-};
-
-const buildReleaseQaChoiceRun = (type) => {
-  const weapon = WEAPON_TIMELINE[RELEASE_QA_WEAPON_TIER];
-  const base = createExpeditionRun({
-    runId: `release-qa-${type}-choice-${Date.now()}`,
-    weaponTier: RELEASE_QA_WEAPON_TIER,
-    weaponName: weapon.name,
-    seed: 71237,
-  });
-  const selected = getReleaseQaSupportSelection(type);
-  const encounter = selected.encounter;
-  return sanitizeExpeditionRun({
-    ...base,
-    phase: `${type}-choice`,
-    depth: 2,
-    encounter,
-    enemyHp: 0,
-    enemyMaxHp: 0,
-    rngState: selected.rngState,
-    recentEncounterIds: selected.recentEncounterIds,
-    recentEncounterTypes: selected.recentEncounterTypes,
-    enemyStreak: selected.enemyStreak,
-    encounteredIds: [base.encounter.id, encounter.id],
-    seenHistoryCardIds: [...new Set([base.encounter.historyCardId, encounter.historyCardId])],
-    lastDrop: {},
-    queuedEnemyAction: null,
-    step: 1,
-    lastAction: {
-      id: 1,
-      actor: type,
-      text: encounter.choicePrompt,
-    },
-  });
-};
-
-const buildReleaseQaCombatRun = (feedbackType) => {
-  const weapon = WEAPON_TIMELINE[RELEASE_QA_WEAPON_TIER];
-  const base = createExpeditionRun({
-    runId: `release-qa-combat-${feedbackType}-${Date.now()}`,
-    weaponTier: RELEASE_QA_WEAPON_TIER,
-    weaponName: weapon.name,
-    seed: 982451,
-  });
-  const isPlayerFeedback = feedbackType === 'player-feedback';
-  const run = {
-    ...base,
-    phase: 'player-attack',
-    playerHp: base.playerMaxHp - 12,
-    step: 1,
-    lastAction: isPlayerFeedback
-      ? {
-          id: 1,
-          actor: 'player',
-          attackName: base.combatProfile.attackName,
-          damage: 42,
-          critical: true,
-          healed: Math.max(1, base.combatProfile.healOnHit),
-          attackBonus: 18,
-          critMultiplier: base.combatProfile.critMultiplier,
-          text: `[릴리스 QA] ${base.combatProfile.attackName} · 치명타/적중 회복/지원 공격 배지 동시 표시`,
-        }
-      : {
-          id: 1,
-          actor: 'enemy',
-          damage: 8,
-          guarded: Math.max(1, base.combatProfile.guard),
-          text: '[릴리스 QA] 적 공격을 방어해 피해 경감 배지를 표시한다.',
-        },
-  };
-  return sanitizeExpeditionRun(run);
-};
 
 const getTodayStr = () => {
   const d = new Date();
