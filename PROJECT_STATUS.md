@@ -300,6 +300,7 @@ P1 구조 개선은 완료되었다. 1.2의 상세 범위와 수치 기준은 [1
 
 - `npm run validate:publish`: 수동 3건 완료와 RC→Stable 문서 전환이 모두 끝나야 통과
 - `.github/workflows/release.yml`: `master` 수동 실행 전용, 버전·최신 HEAD·수동 확인·기존 태그를 검사
+- `validate:release` publish 자가검증: RC에서는 `validate:publish` 차단, Stable에서는 성공을 매 CI에서 실제 subprocess 실행으로 확인
 - `docs/releases/PUBLISHING.md`: 최종화 PR과 Release 발행 순서 기록
 - 현재 RC에서는 `validate:publish`가 실패하는 것이 의도된 상태이며 태그/Release를 만들지 않음
 
