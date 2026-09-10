@@ -302,6 +302,8 @@ P1 구조 개선은 완료되었다. 1.2의 상세 범위와 수치 기준은 [1
 - `.github/workflows/release.yml`: `master` 수동 실행 전용, 버전·최신 HEAD·수동 확인·기존 태그를 검사
 - `validate:release` publish 자가검증: RC에서는 `validate:publish` 차단, Stable에서는 성공을 매 CI에서 실제 subprocess 실행으로 확인
 - `docs/releases/PUBLISHING.md`: 최종화 PR과 Release 발행 순서 기록
+- DEV `?debug=1` 릴리스 QA: 선택형 NPC/사건·전투 피드백·저장/백업을 즉시 재현하며 QA 탐사는 저장/정산/자동진행에서 격리
+- `validate:release-qa`: 위 QA fixture가 실제 sanitize 계약을 유지하는지 전체 게이트에서 검증
 - 현재 RC에서는 `validate:publish`가 실패하는 것이 의도된 상태이며 태그/Release를 만들지 않음
 
 다음 단계는 **수동 릴리스 게이트 3건 완료 → 최종화 PR → Pages 성공 확인 → Publish GitHub Release 워크플로 실행**이다.
