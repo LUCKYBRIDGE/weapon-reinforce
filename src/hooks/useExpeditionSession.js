@@ -428,6 +428,27 @@ export default function useExpeditionSession({
     playSfx,
   ]);
 
+  const replaceExpeditionForDebug = useCallback((value, label = '릴리스 QA') => {
+    if (!import.meta.env.DEV) return false;
+
+    const nextRun = value ? sanitizeExpeditionRun(value) : null;
+    if (value && !nextRun) {
+      addLog(`[테스트] ${label} 탐사 상태가 sanitize 검증을 통과하지 못했습니다.`, 'warning');
+      return false;
+    }
+
+    setExpeditionSpeed(1);
+    persistActiveExpedition(nextRun, onStorageFailure);
+    setExpedition(nextRun);
+    addLog(
+      nextRun
+        ? `[테스트] ${label} 화면을 열었습니다.`
+        : '[테스트] 릴리스 QA 탐사 화면을 종료했습니다.',
+      'warning',
+    );
+    return true;
+  }, [addLog, onStorageFailure]);
+
   const toggleExpeditionSpeed = useCallback(() => {
     setExpeditionSpeed(current => current === 1 ? 2 : 1);
   }, []);
@@ -453,5 +474,6 @@ export default function useExpeditionSession({
     handleBuyExpeditionSupply,
     handleEquipExpeditionSupply,
     toggleExpeditionSpeed,
+    replaceExpeditionForDebug,
   };
 }
