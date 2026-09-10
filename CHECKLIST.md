@@ -16,6 +16,8 @@
 - [x] `npm run validate:runtime`: 허용 자산, 용량 상한, 퀴즈 카탈로그가 참조한 516개 파일과 실제 공개 파일의 일치, 분리된 토끼·자라 런타임 자산 0개를 검사한다.
 - [x] `npm run validate:release`: package/lock 버전, README 콘텐츠 수, 1.2 릴리스 노트, 수동 게이트 목록의 정합성을 검사한다.
 - [x] `npm run validate:all`: 위 검사를 배포 워크플로와 같은 한 명령으로 재실행할 수 있다.
+- [x] `npm run validate:publish`: 수동 게이트 완료와 RC→Stable 문서 전환을 요구하는 정식 발행 전용 검증을 제공한다.
+- [x] `.github/workflows/release.yml`: 최신 master·버전·수동 완료 확인·태그 중복을 검사한 뒤에만 GitHub Release를 발행한다.
 
 ## 저장과 복구
 
