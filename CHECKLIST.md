@@ -18,6 +18,7 @@
 - [x] `npm run validate:all`: 위 검사를 배포 워크플로와 같은 한 명령으로 재실행할 수 있다.
 - [x] `npm run validate:publish`: 수동 게이트 완료와 RC→Stable 문서 전환을 요구하는 정식 발행 전용 검증을 제공한다.
 - [x] `.github/workflows/release.yml`: 최신 master·버전·수동 완료 확인·태그 중복을 검사한 뒤에만 GitHub Release를 발행한다.
+- [x] `validate:release`: 현재 문서가 RC이면 `validate:publish`가 실제로 실패하고 Stable이면 성공하는지 subprocess로 자가검증한다.
 
 ## 저장과 복구
 
